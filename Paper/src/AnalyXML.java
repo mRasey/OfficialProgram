@@ -106,12 +106,13 @@ public class AnalyXML {
         // 插入在第一个w:r之前
         elements.add(0, DocumentHelper.createElement("w:commentRangeStart"));
         p.element("w:commentRangeStart").addAttribute("w:id", commentIdIndex + "");
-        elements.add(2, DocumentHelper.createElement("w:commentRangeEnd"));
+        elements.add(elements.size(), DocumentHelper.createElement("w:commentRangeEnd"));
         p.element("w:commentRangeEnd").addAttribute("w:id", commentIdIndex + "");
-        elements.add(3, DocumentHelper.createElement("w:r"));
+        elements.add(elements.size()-1, DocumentHelper.createElement("w:r"));
         Element newR = (Element) p.elements("w:r").get(p.elements("w:r").size() - 1);
         newR.addElement("w:commentReference");
         newR.element("commentReference").addAttribute("w:id", commentIdIndex + "");
+        commentIdIndex++;
         return this;
     }
 
