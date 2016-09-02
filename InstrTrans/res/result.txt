@@ -1,0 +1,99 @@
+Constant pool:
+#1 = Class com/billy/dexcode/MainActivity
+#2 = Class android/support/v7/app/AppComp
+#3 = Utf8 Code
+#4 = Utf8 <init>
+#5 = Utf8 onCreate
+#6 = Utf8 ()V
+#7 = Utf8 (Landroid/os/Bundle;)V
+#8 = Class Lcom/billy/dexcode/MainActivity
+#9 = NameAndType #4:#6
+#10 = Methodref #8.#9
+#11 = NameAndType #5:#7
+#12 = Methodref #8.#11
+#13 = Utf8 hello
+#14 = Utf8 world
+#15 = Class Ljava/lang/System
+#16 = Utf8 out
+#17 = Utf8 Ljava/io/PrintStream;
+#18 = NameAndType #16:#17
+#19 = Fieldref #15.#18
+
+{
+.method <init>()V
+.line 6
+0: aload_0
+1: invokespecial #10
+4: return
+.end method
+.method onCreate(Landroid/os/Bundle;)V
+.line -1
+0: bipush 0x01
+2: istore_2
+.line 10
+3: aload_0
+4: aload_1
+5: invokespecial #12
+.line 11
+ldc 0x7f04001a
+10: aload_0
+11: invokevirtual #12
+.line 13
+14: ldc #13
+16: astore 4
+.line 14
+18: bipush 0xff
+20: aload 4
+22: invokevirtual #12
+25: lookupswitch
+99162322 72
+113318802 93
+default 50
+:cond_14
+:default_0
+:goto_14
+50: tableswitch
+0 113
+1 128
+default 71
+.line 24
+:default_1
+:goto_17
+71: return
+.line 14
+:sswitch_18
+72: ldc #13
+74: aload 4
+76: invokevirtual #12
+79: ifeq 50
+82: bipush 0x00
+84: istore_3
+85: goto 50
+88: goto_w 50
+:sswitch_22
+93: ldc #14
+95: aload 4
+97: invokevirtual #12
+100: ifeq 50
+103: iload_2
+104: istore_3
+105: goto 50
+108: goto_w 50
+.line 16
+:pswitch_2c
+113: getfield #19
+116: iload_2
+117: invokevirtual #12
+120: goto 71
+123: goto_w 71
+.line 19
+:pswitch_32
+128: getfield #19
+131: bipush 0x02
+133: invokevirtual #12
+136: goto 71
+139: goto_w 71
+.line 14
+144: nop
+.end method
+}
