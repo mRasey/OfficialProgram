@@ -14,9 +14,9 @@
 </head>
 <body>
     <%
-        String absolutePath = "C:\\Users\\Billy\\Documents\\GitHub\\Java\\Paper\\web\\data\\";
+        String absolutePath = "C:/Users/Billy/Documents/GitHub/OfficialProgram/Paper/data/";
         String dirName = request.getParameter("dirName");
-        File txtFile = new File(absolutePath + dirName + "\\check_out.txt");
+        File txtFile = new File(absolutePath + dirName + "/check_out.txt");
         FileReader fileReader = new FileReader(txtFile);
         BufferedReader bf = new BufferedReader(fileReader);
         String readLine = bf.readLine();

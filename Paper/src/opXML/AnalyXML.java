@@ -1,3 +1,5 @@
+package opXML;
+
 import org.dom4j.*;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.SAXReader;
@@ -13,11 +15,13 @@ import java.util.*;
  */
 public class AnalyXML {
 
+    private static final String tempPath = String.valueOf(AnalyXML.class.getResource(""));
+    private static final String classPath = tempPath.substring(tempPath.indexOf("/") + 1);
     private static final String docPath = "C:\\Users\\Billy\\Desktop\\paper\\";// word文档的位置
     private static final String docName = "origin";
     private static final String txtPath = docPath + "check_out.txt";//存储信息的TXT文件路径
     private static final String docXmlPath = docPath + docName + "/word/document.xml";//document.xml的文件路径
-    private static final String comXmlPath = "res/comments.xml";//comment.xml的文件路径
+    private static final String comXmlPath = classPath + "comments.xml";//comment.xml的文件路径
     private static final String contentTypeXmlPath = docPath + docName + "/[Content_Types].xml";
     private static final String docXmlRelsPath = docPath + docName + "/word/_rels/document.xml.rels";
     private HashMap<Integer, ArrayList<String>> idToComment = new HashMap<>();
@@ -224,7 +228,7 @@ public class AnalyXML {
         output(conDocument, contentTypeXmlPath);
         output(docRelsDocument, docXmlRelsPath);
 
-        new ExtractXML(docPath + docName, docPath + "result.docx").buildZip();
+        new ExtractXML(docPath + docName, docPath + "resultWithComments.docx").buildZip();
         ExtractXML.deleteAllDir(docPath, "origin");
     }
 

@@ -15,14 +15,14 @@
 </head>
 <body>
     <%
-        String absolutePath = "C:\\Users\\Billy\\Documents\\GitHub\\Java\\Paper\\web\\data\\";
+        String absolutePath = "C:/Users/Billy/Documents/GitHub/OfficialProgram/Paper/data/";
         String dirName = request.getParameter("dirName");
         response.setContentType("application/msword");
         response.setHeader("Content-disposition", "attachment; filename=result.docx");
         BufferedInputStream bis = null;
         BufferedOutputStream bos = null;
         try {
-            bis = new BufferedInputStream(new FileInputStream(new File(absolutePath + dirName + "\\result.docx")));
+            bis = new BufferedInputStream(new FileInputStream(new File(absolutePath + dirName + "/result.docx")));
             bos = new BufferedOutputStream(response.getOutputStream());
             byte[] buff = new byte[2048];
             int bytesRead;
