@@ -112,7 +112,7 @@ public class AnalyXML {
         p.element("w:commentRangeStart").addAttribute("w:id", commentIdIndex + "");
         elements.add(elements.size(), DocumentHelper.createElement("w:commentRangeEnd"));
         p.element("w:commentRangeEnd").addAttribute("w:id", commentIdIndex + "");
-        elements.add(elements.size()-1, DocumentHelper.createElement("w:r"));
+        elements.add(elements.size(), DocumentHelper.createElement("w:r"));
         Element newR = (Element) p.elements("w:r").get(p.elements("w:r").size() - 1);
         newR.addElement("w:commentReference");
         newR.element("commentReference").addAttribute("w:id", commentIdIndex + "");

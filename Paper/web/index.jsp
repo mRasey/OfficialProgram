@@ -1,12 +1,8 @@
-<%--
-  Created by IntelliJ IDEA.
-  User: Billy
-  Date: 2016/8/6
-  Time: 10:46
-  To change this template use File | Settings | File Templates.
---%>
 <%@ page contentType="text/html;charset=gbk" language="java" %>
 <html>
+  <style>
+
+  </style>
   <head>
     <title>论文格式校正</title>
   </head>
@@ -24,11 +20,13 @@
       }
   </script>
   <body>
-  <div align="center">
-      <form onsubmit="return checkFileType()" method="post" action="UploadFile.jsp" enctype="multipart/form-data">
-          <input type="file" name="file" id="file"><br />
-          <input type="submit" value="提交">
-      </form>
-  </div>
+      <body>
+      <div align="center">
+          <form onsubmit="return checkFileType()" method="post" action="UploadFile.jsp" enctype="multipart/form-data">
+              <input type="file" name="file" id="file"><br />
+              <input type="submit" value="提交">
+          </form>
+      </div>
+      </body>
   </body>
 </html>

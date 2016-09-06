@@ -21,8 +21,9 @@
 <%
     try{
         ExecPy.run((String) request.getAttribute("fileName"));
-    } catch (Exception e){
-        e.printStackTrace();
+    }
+    catch (Exception e) {
+        response.sendRedirect("showErrorInfo.jsp");
     }
     request.setAttribute("fileName", request.getAttribute("fileName"));
 %>

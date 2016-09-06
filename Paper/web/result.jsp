@@ -1,12 +1,6 @@
 <%@ page import="java.io.File" %>
 <%@ page import="java.io.FileReader" %>
-<%@ page import="java.io.BufferedReader" %><%--
-  Created by IntelliJ IDEA.
-  User: Billy
-  Date: 2016/8/6
-  Time: 11:37
-  To change this template use File | Settings | File Templates.
---%>
+<%@ page import="java.io.BufferedReader" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <html>
 <body>
