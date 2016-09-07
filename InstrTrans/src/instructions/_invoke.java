@@ -17,8 +17,8 @@ import java.util.ArrayList;
 它与上面介绍的两类指令作用相同，只是在指令中增加了jumbo字节码后缀，且寄存器值与指令的索引取值范围更大。*/
 public class _invoke extends Instruction {
 
-    @Override
-    public void analyze(String[] dexCodes) {
+    
+    public void analyze(String[] dexCodes,int lineNum) {
     	super.analyze(dexCodes);
     	//先提取数据到操作数栈
     	int i = 1;
@@ -40,20 +40,39 @@ public class _invoke extends Instruction {
     		globalArguments.finalByteCodePC++;
     	}
     	
+    	//判断返回值是否被用到
+    	boolean IfUsed = ifUsedReturn(lineNum);
+    	String returnType = dexCodes[dexCodes.length-1].substring(dexCodes[dexCodes.length-1].indexOf("(")+1);
+    	String code = "pop";
+    	if(returnType.equals("D") || returnType.equals("J")){
+    		code = "pop2";
+    	}
+    	else if(returnType.equals("V")){
+    		code = null;
+    	}
+    	
+    	
     	//翻译成invoke指令
+    	String classname = dexCodes[dexCodes.length-1].split("->")[0];
+    	String methodname = dexCodes[dexCodes.length-1].split("->")[1];
     	if(dexCodes[0].contains("virtual")){
-    		globalArguments.finalByteCode.add("invokevirtual"+" "+globalArguments.className.replace(";", ".")+globalArguments.methodName.replace("(", ":("));
+    		globalArguments.finalByteCode.add("invokevirtual"+" "+classname.replace(";", ".")+methodname.replace("(", ":("));
     	}
     	else if(dexCodes[0].contains("static")){
-    		globalArguments.finalByteCode.add("invokestatic"+" "+globalArguments.className.replace(";", ".")+globalArguments.methodName.replace("(", ":("));
+    		globalArguments.finalByteCode.add("invokestatic"+" "+classname.replace(";", ".")+methodname.replace("(", ":("));
     	}
     	else if(dexCodes[0].contains("interface")){
-    		globalArguments.finalByteCode.add("invokeinterface"+" "+globalArguments.className.replace(";", ".")+globalArguments.methodName.replace("(", ":("));
+    		globalArguments.finalByteCode.add("invokeinterface"+" "+classname.replace(";", ".")+methodname.replace("(", ":("));
     	}
     	else{
-    		globalArguments.finalByteCode.add("invokespecial"+" "+globalArguments.className.replace(";", ".")+globalArguments.methodName.replace("(", ":("));
+    		globalArguments.finalByteCode.add("invokespecial"+" "+classname.replace(";", ".")+methodname.replace("(", ":("));
     	}
     	globalArguments.finalByteCodePC++;
+    	
+    	if(!IfUsed && code != null){
+			globalArguments.finalByteCode.add(code);
+			globalArguments.finalByteCodePC++;
+		}
     }
 
     @Override
@@ -61,8 +80,32 @@ public class _invoke extends Instruction {
         //先求出所有参数的类型，保存在regTypes中，最后再依次赋值
         ArrayList<String> regTypes = new ArrayList<>();
         regTypes = getRegType(dexCode);
+        //参数寄存器的名字
+        int i = 0;
+        String[] regName = new String[regTypes.size()];
+        for(i=0;i<regTypes.size();i++){
+        	regName[i]=dexCode.get(i+1);
+        }
+        //为之前的const所用寄存器赋类型
+        int order = lineNum-1;
+        int mark = -1; 	 //记录const中用到的寄存器在invoke指令参数集中的位置
+        ArrayList<String> lastIns;
+        do{
+        	lastIns = globalArguments.rf.getInstruction(order);
+        	if(lastIns.get(0).contains("const")){
+        		mark = ifCont(regName, lastIns.get(1));
+        	}
+        	else{
+        		mark = -1;
+        	}
+        	if(mark >=0 ){
+        		Register register = globalArguments.registerQueue.getByDexName(lastIns.get(1));
+        		register.updateType(order, regTypes.get(mark));
+        	}
+        	order--;
+        }while(order >= 0 && mark >=0);
+        i = 1;
         //为寄存器分配类型
-        int i = 1;
         for (String aRegType : regTypes) {
             Register register1 = globalArguments.registerQueue.getByDexName(dexCode.get(i++));
             register1.updateType(lineNum, aRegType);
@@ -72,7 +115,21 @@ public class _invoke extends Instruction {
                 register2.updateType(lineNum, aRegType);
             }
         }
+        
+        
+        
         return true;
+    }
+    
+    public int ifCont(String []datas, String data){
+    	int i=0;
+    	for(i=0;i<datas.length;i++){
+    		if(datas[i].equals(data)){
+    			return i;
+    		}
+    	}
+    	
+    	return -1;
     }
 
     public ArrayList<String> getRegType(ArrayList<String> dexCode){
@@ -94,7 +151,7 @@ public class _invoke extends Instruction {
                 }while (types.startsWith("["));
                 if((types.charAt(0) + "").equals("L")) {
                     regTypes.add(tempType + types.substring(0, types.indexOf(";") + 1));
-                    types += ";";
+                    types = types.substring(types.indexOf(";"));
                 }
                 else {
                     regTypes.add(tempType + types.charAt(0));
@@ -106,5 +163,8 @@ public class _invoke extends Instruction {
         }
         return regTypes;
     }
-    
+
+    public boolean ifUsedReturn(int lineNum){
+    	return true;
+    }
 }

@@ -53,22 +53,55 @@ public class _op extends Instruction {
     //像double这种用到两个寄存器的，第二个寄存器怎么搞？
     @Override
     public boolean ifUpgrade(ArrayList<String> dexCode, int lineNum) {
-        String dataType = dexCode.get(0).substring(dexCode.get(0).indexOf("-") + 1,dexCode.get(0).indexOf("-") + 2).toUpperCase();//获得数据类型
+    	ArrayList<String> lastIns;
+    	Register register;
+    	
+    	String dataType = dexCode.get(0).substring(dexCode.get(0).indexOf("-") + 1,dexCode.get(0).indexOf("-") + 2).toUpperCase();//获得数据类型
         if(dataType.equals("L")){
         	dataType = "J";
         }
     	Register firstRegister = globalArguments.registerQueue.getByDexName(dexCode.get(1));
         Register secondRegister = globalArguments.registerQueue.getByDexName(dexCode.get(2));
         if(dexCode.get(0).contains("/")){
-        	
             firstRegister.updateType(lineNum, dataType);
             secondRegister.updateType(lineNum, dataType);
+            for(int i=1;i<=2;i++){
+            	lastIns = globalArguments.rf.getInstruction(lineNum-i);
+                if(lastIns.get(0).contains("const")){
+                	register = globalArguments.registerQueue.getByDexName(lastIns.get(1));
+                	if(register.dexName.equals(firstRegister.dexName) || register.dexName.equals(secondRegister.dexName)){
+                		register.updateType(lineNum-i, dataType);
+                    }
+                	else{
+                		break;
+                	}
+                }
+                else{
+                	break;
+                }
+            }
         }
         else{
             Register thirdRegister = globalArguments.registerQueue.getByDexName(dexCode.get(3));
             firstRegister.updateType(lineNum, dataType);
             secondRegister.updateType(lineNum, dataType);
             thirdRegister.updateType(lineNum, dataType);
+            
+            for(int i=1;i<=2;i++){
+            	lastIns = globalArguments.rf.getInstruction(lineNum-i);
+                if(lastIns.get(0).contains("const")){
+                	register = globalArguments.registerQueue.getByDexName(lastIns.get(1));
+                	if(register.dexName.equals(secondRegister.dexName) || register.dexName.equals(thirdRegister.dexName)){
+                		register.updateType(lineNum-i, dataType);
+                    }
+                	else{
+                		break;
+                	}
+                }
+                else{
+                	break;
+                }
+            }
         }
         return true;
     }

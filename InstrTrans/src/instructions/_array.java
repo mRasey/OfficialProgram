@@ -46,7 +46,12 @@ public class _array extends Instruction{
             case "new-array" :
             case "new-array/jumbo" :
             	globalArguments.finalByteCode.add("iload" + " " + secondRegister.stackNum);
-            	globalArguments.finalByteCode.add("newarray" + " " + dexCodes[3]);
+            	if( dexCodes[3].charAt(dexCodes[3].indexOf("[")+1) == 'L' || dexCodes[3].charAt(dexCodes[3].indexOf("[")+1) == '['){
+            		globalArguments.finalByteCode.add("anewarray" + " " + dexCodes[3]);
+            	}
+            	else{
+            		globalArguments.finalByteCode.add("newarray" + " " + dexCodes[3]);
+            	}
             	globalArguments.finalByteCode.add("astore" + " "+ firstRegister.stackNum);
             	globalArguments.finalByteCodePC += 3;
                 break;
@@ -57,7 +62,13 @@ public class _array extends Instruction{
             	//创建新数组
             	String arrayType = dexCodes[dexCodes.length-1];
             	globalArguments.finalByteCode.add("ldc" + " " + (dexCodes.length-2));
-            	globalArguments.finalByteCode.add("newarray" + " " + arrayType);
+            	if( dexCodes[3].charAt(dexCodes[3].indexOf("[")+1) == 'L' || dexCodes[3].charAt(dexCodes[3].indexOf("[")+1) == '['){
+            		globalArguments.finalByteCode.add("anewarray" + " " + arrayType);
+            	}
+            	else{
+            		globalArguments.finalByteCode.add("newarray" + " " + arrayType);
+            	}
+            	//globalArguments.finalByteCode.add("newarray" + " " + arrayType);
             	globalArguments.finalByteCodePC += 2;
             	
             	//取出数据类型
@@ -66,6 +77,8 @@ public class _array extends Instruction{
                     dataType3 = "l";
                 else if(dataType3.equals("l"))
                     dataType3 = "a";
+                else if(dataType3.equals("z"))
+                	dataType3 = "i";
             	String optype3 = "";
             	if(dataType3.equals("f") || dataType3.equals("l") || dataType3.equals("d")){
             		optype3 = dataType3 + "load";
@@ -101,6 +114,8 @@ public class _array extends Instruction{
                     dataType1 = "l";
                 else if(dataType1.equals("l"))
                     dataType1 = "a";
+                else if(dataType1.equals("z"))
+                	dataType1 = "i";
             	//定义赋值方式
             	String optype1 = "";
             	if(dataType1.equals("b") || dataType1.equals("s")){
@@ -130,7 +145,19 @@ public class _array extends Instruction{
                 break;
                 
             case "aget" :
+            case "aget-wide" :
+            case "aget-object" :
+            case "aget-boolean" :
+            case "aget-byte" :
+            case "aget-char" :
+            case "aget-short" :
             case "aput" :
+            case "aput-wide" :
+            case "aput-object" :
+            case "aput-boolean" :
+            case "aput-byte" :
+            case "aput-char" :
+            case "aput-short" :
 //                 = dexCodes[0].charAt(dexCodes[0].lastIndexOf("-") + 1) + "";
                 globalArguments.finalByteCode.add("aload" + " " + secondRegister.stackNum);
                 globalArguments.finalByteCode.add("iload" + " " + thirdRegister.stackNum);
@@ -139,6 +166,8 @@ public class _array extends Instruction{
                     dataType2 = "l";
                 else if(dataType2.startsWith("l"))
                     dataType2 = "a";
+                else if(dataType2.equals("z"))
+                	dataType2 = "i";
                 
                 if(dexCodes[0].contains("get")) {
                     globalArguments.finalByteCode.add(dataType2 + "aload");
@@ -155,6 +184,8 @@ public class _array extends Instruction{
 
     @Override
     public boolean ifUpgrade(ArrayList<String> dexCode, int lineNum) {
+    	ArrayList<String> lastIns;
+    	Register register;
         Register firstRegister = globalArguments.registerQueue.getByDexName(dexCode.get(1));
         Register secondRegister = null;
         if(dexCode.get(2).matches("[p,v]\\d+")) {
@@ -175,21 +206,48 @@ public class _array extends Instruction{
             case "new-array/jumbo" :
                 firstRegister.updateType(lineNum, dexCode.get(3));
                 secondRegister.updateType(lineNum, "I");
+                //为上一个const寄存器赋类型
+                lastIns = globalArguments.rf.getInstruction(lineNum-1);
+                if(lastIns.get(0).contains("const") && lastIns.get(1).equals(secondRegister.dexName)){
+                	secondRegister.updateType(lineNum-1, "I");
+                }
                 break;
             case "filled-new-array" :
             case "filled-new-array/range" :
             case "filled-new-array/jumbo" :
                 //这里创建的新数组会放在栈顶，用move-result-object赋给寄存器
-
                 String arrayType = dexCode.get(dexCode.size()-1);
                 String dataType = arrayType.substring(arrayType.indexOf("[") + 1);
 
                 int j = 1;
-                Register register;
                 while(j<dexCode.size()){
                     register = globalArguments.registerQueue.getByDexName(dexCode.get(j));
                     register.updateType(lineNum, dataType);
                 }
+                //为上面若干const寄存器赋类型
+                String[] regName = new String[dexCode.size()-2];
+                for(j=0;j<regName.length;j++){
+                	regName[j] = dexCode.get(j+1);
+                }
+                int order = lineNum-1;
+                int mark = -1; 	 //记录const中用到的寄存器在invoke指令参数集中的位置
+                do{
+                	lastIns = globalArguments.rf.getInstruction(order);
+                	if(lastIns.get(0).contains("const")){
+                		mark = ifCont(regName, lastIns.get(1));
+                	}
+                	else{
+                		mark = -1;
+                	}
+                	if(mark >=0 ){
+                		register = globalArguments.registerQueue.getByDexName(lastIns.get(1));
+                		register.updateType(order, dataType);
+                	}
+                	order--;
+                }while(order >= 0 && mark >=0);
+                
+                
+                
                 break;
 
             case "fill-array-data" :
@@ -197,10 +255,52 @@ public class _array extends Instruction{
                 break;
 
             case "aget" :
+            case "aget-wide" :
+            case "aget-object" :
+            case "aget-boolean" :
+            case "aget-byte" :
+            case "aget-char" :
+            case "aget-short" :
+            	firstRegister.updateType(lineNum, secondRegister.currentType.substring(secondRegister.currentType.indexOf("[") + 1));
+                secondRegister.updateType(lineNum, secondRegister.currentType);
+                thirdRegister.updateType(lineNum, "I");
+                lastIns = globalArguments.rf.getInstruction(lineNum-1);
+                if(lastIns.get(0).contains("const")){
+                	if(lastIns.get(1).equals(thirdRegister.dexName)){
+                		thirdRegister.updateType(lineNum-1, "I");
+                	}
+                }
+                break;
             case "aput" :
+            case "aput-wide" :
+            case "aput-object" :
+            case "aput-boolean" :
+            case "aput-byte" :
+            case "aput-char" :
+            case "aput-short" :
                 firstRegister.updateType(lineNum, secondRegister.currentType.substring(secondRegister.currentType.indexOf("[") + 1));
                 secondRegister.updateType(lineNum, secondRegister.currentType);
                 thirdRegister.updateType(lineNum, "I");
+                //System.out.println(firstRegister.dexName+" "+secondRegister.dexName+" "+thirdRegister.dexName);
+                for(int i=1;i<=2;i++){
+                	lastIns = globalArguments.rf.getInstruction(lineNum-i);
+                    if(lastIns.get(0).contains("const")){
+                    	if(lastIns.get(1).equals(thirdRegister.dexName)){
+                    		thirdRegister.updateType(lineNum-i, "I");
+                    	}
+                    	else if(lastIns.get(1).equals(firstRegister.dexName)){
+                    		firstRegister.updateType(lineNum-i, secondRegister.currentType.substring(secondRegister.currentType.indexOf("[") + 1));
+                    		//System.err.println((lineNum-i)+" "+ firstRegister.dexName+" "+firstRegister.getType(lineNum-i));
+                    	}
+                    	else{
+                    		break;
+                    	}
+                    }
+                    else{
+                    	break;
+                    }
+                }
+                
                 break;
 
         }
@@ -208,4 +308,18 @@ public class _array extends Instruction{
 
         return true;
     }
+    
+    public int ifCont(String []datas, String data){
+    	int i=0;
+    	for(i=0;i<datas.length;i++){
+    		if(datas[i].equals(data)){
+    			return i;
+    		}
+    	}
+    	
+    	return -1;
+    }
+    
+    
 }
+

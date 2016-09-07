@@ -11,10 +11,12 @@ import java.util.Map;
 public class globalArguments {
     public static RegisterQueue registerQueue = new RegisterQueue();
     static String smailFilePath = "res/MainActivity.smali";
+    //static String smailFilePath = "res/testJ.smali";
     public static ReadFile rf = new ReadFile(smailFilePath);
     public static int LineNumber = 0;   //编号
     
-    public static Output ot = new Output();
+    public static OutputByteCodeFile obcf = new OutputByteCodeFile();
+    public static OutputClassFile ocf = new OutputClassFile();
     public static TranslateTable tt = new TranslateTable();
     public static Optimize op = new Optimize();
     public static ConstantPool cp = new ConstantPool();
@@ -73,10 +75,11 @@ public class globalArguments {
     //方法信息
     public static int method_count = 0;
     public static ArrayList<ArrayList<String>> method_info = new ArrayList<>();
-    public static ArrayList<Integer> method_localreg_number = new ArrayList<>();
     public static ArrayList<Integer> methodName_conpool_number = new ArrayList<>();
     public static ArrayList<Integer> methodType_conpool_number = new ArrayList<>();
     public static ArrayList<String> method_codes = new ArrayList<>();
+    public static ArrayList<Integer> method_max_stack = new ArrayList<>();
+    public static ArrayList<Integer> method_max_locals = new ArrayList<>();
 
     public static HashMap<String, String> instrToHex = new HashMap<>();
     public static HashMap<String, Integer> instrSizes = new HashMap<>();

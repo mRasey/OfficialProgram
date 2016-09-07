@@ -72,7 +72,7 @@ public class field_info {
 				bstr[1] = '1';
 				break;
 			default:
-				System.out.println("error in field/set_access_flags");
+				System.err.println("error in field/set_access_flags");
 				break;
 			}
 		}

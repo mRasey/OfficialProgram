@@ -16,11 +16,12 @@ public class Translation {
 	
     String[] dexCodes;
 	//java字节码指令编号
-	int classCodeNumber = 0;
+	int lineNum = 0;
 
     public Translation(ArrayList<String> instruction, int dexCodeNumber) {
         this.instruction = instruction;
         globalArguments.dexCodeNumber = dexCodeNumber;
+        lineNum = dexCodeNumber;
         dexCodes = instruction.toArray(new String[instruction.size()]);
     }
 	
@@ -43,7 +44,7 @@ public class Translation {
         else if(dexCodes[0].contains("instance"))
             new _instance().analyze(dexCodes);
         else if(dexCodes[0].contains("invoke"))
-            new _invoke().analyze(dexCodes);
+            new _invoke().analyze(dexCodes,lineNum);
         else if(dexCodes[0].contains("iput"))
             new _iput().analyze(dexCodes);
         else if(dexCodes[0].contains("monitor"))
@@ -78,8 +79,8 @@ public class Translation {
         else if(dexCodes[0].contains("throw"))
             new _throw().analyze(dexCodes);
         else {
-        	System.out.println(dexCodes[0]);
-            System.out.println("error instruction");
+            System.err.println("error in Translation");
+            System.err.println(dexCodes[0]);
         }
 	}
 	

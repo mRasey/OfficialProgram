@@ -1,9 +1,11 @@
 package transToClass;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -26,12 +28,12 @@ public class ClassFile {
     field_info[] fields;// 字段表
     u2 method_count = new u2();// 方法计数器
     method_info[] methods;// 方法表
-    u2 attributes_count = new u2();// 属性计数器
+    u2 attributes_count = new u2((short) 0);// 属性计数器
     attribute_info[] attributes;// 属性表
     
     ArrayList<String> byteCodeData = new ArrayList<>();
     
-    public ClassFile() {
+    public ClassFile() throws IOException {
     	readByteCodeFile();
     	magic.set(-889275714);
     	minor_version.set((short) 0);
@@ -89,6 +91,79 @@ public class ClassFile {
                 + attributes_string;
     }
 
+    public void print() throws IOException{
+    	
+    	File byteCodeFile = new File("res/check.txt");
+		FileWriter fw = new FileWriter(byteCodeFile.getAbsoluteFile(),true);
+		BufferedWriter bw = new BufferedWriter(fw);
+    	
+    	int i=0,j=0;
+    	bw.write("magic "+ magic.toString()+"\n");
+    	bw.write("version: "+ minor_version.toString()+major_version.toString()+"\n");
+    	bw.write("constant_pool_count: "+ constant_pool_count.toString()+"\n");
+    	bw.write("constant_pool:"+"\n");
+    	while(!byteCodeData.get(j).equals("Constant pool:")){
+    		j++;
+    	}
+    	j++;
+    	for(i = 0; i < constant_pool_count.get()-1; i++){
+    		bw.write(byteCodeData.get(j++)+"\n");
+    		bw.write(constant_pool[i].toString()+"\n");
+    	}
+    		
+    	bw.write("access_flags: "+access_flags+"\n");
+    	bw.write("this_class: "+this_class.toString()+"\n");
+    	bw.write("super_class: "+super_class.toString()+"\n");
+    	
+    	
+    	
+    	bw.write("interfaces_count: "+ interfaces_count.toString()+"\n");
+    	bw.write("interfaces:"+"\n");
+    	for(i = 0; i < interfaces_count.get(); i++){
+    		bw.write(globalArguments.inter_name.get(i)+"\n");
+    		bw.write("inter_conpool_number:"+globalArguments.inter_conpool_number.get(i)+"\n");
+    		bw.write(interfaces[i].toString()+"\n");
+    	}
+    		
+    	
+    	bw.write("fields_count: "+ fields_count.toString()+"\n");
+    	bw.write("fields:"+"\n");
+    	for(i = 0; i < fields_count.get(); i++){
+    		bw.write(globalArguments.field_info.get(i)+"\n");
+    		bw.write("fieldName_conpool_number:"+globalArguments.fieldName_conpool_number.get(i)+"\n");
+    		bw.write("fieldType_conpool_number:"+globalArguments.fieldType_conpool_number.get(i)+"\n");
+    		String temp = fields[i].toString();
+    		for(j=0;j<temp.length();j+=4){
+    			bw.write(temp.substring(j,j+4)+" ");
+    		}
+    		bw.write("\n");
+    	}
+    		
+    	
+    	bw.write("method_count: "+ method_count.toString()+"\n");
+    	bw.write("method:"+"\n");
+    	for(i = 0; i < method_count.get(); i++){
+    		bw.write(globalArguments.method_info.get(i)+"\n");
+    		bw.write("methodName_conpool_number:"+globalArguments.methodName_conpool_number.get(i)+"\n");
+    		bw.write("methodType_conpool_number:"+globalArguments.methodType_conpool_number.get(i)+"\n");
+    		String temp = methods[i].toString();
+    		for(j=0;j<16;j+=4){
+    			bw.write(temp.substring(j,j+4)+" ");
+    		}
+    		for(;j<temp.length();j+=2){
+    			bw.write(temp.substring(j,j+2)+" ");
+    		}
+    		bw.write("\n");
+    	}
+    		
+    	
+    	bw.write("attributes_count: "+ attributes_count.toString()+"\n");
+    	bw.write("attributes:"+"\n");
+    	for(i = 0; i < attributes_count.get(); i++)
+    		bw.write(attributes[i].toString()+"\n");
+    	
+    	bw.close();
+    }
     
     public void readByteCodeFile(){
     	String byteCodeFilePath = "res/result.txt";
@@ -148,7 +223,8 @@ public class ClassFile {
 		}
 	}
 	
-	public void fill_methods(){
+	public void fill_methods() throws IOException{
+		new Matchup().buildTransCode();
 		int i = 0;
 		for(i=0;i<globalArguments.method_count;i++){
 			methods[i] = new method_info();
@@ -162,7 +238,6 @@ public class ClassFile {
 		 char[] bstr = "0000000000100000".toCharArray();
 		 int i = 0;
 		 for(i=0;i<globalArguments.classProPerty.size();i++){
-			 //System.out.println(globalArguments.classProPerty.get(i));
 			 switch(globalArguments.classProPerty.get(i)){
 	    		case "public":
 	    			bstr[15]='1';
@@ -189,7 +264,7 @@ public class ClassFile {
 	    			bstr[1]='1';
 	    			break;
 	    		default:
-	    			System.out.println("error in set_access_flags");
+	    			System.err.println("error in set_access_flags");
 	    			break;
 	    	}
 		 }

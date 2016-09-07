@@ -61,7 +61,6 @@ public class CompleteData {
 			new_code +="0x" + byte_str;
 		}
 		else{
-			//System.out.println(data);
 			int n = Integer.parseInt(data);
 			if(n >= 0){
 				String byte_str = Integer.toHexString(n);
@@ -275,7 +274,6 @@ public class CompleteData {
           
         int sum=0;  
         int n=0;  
-        //System.out.println(str);
         for(int i=0;i<str.length();i++){  
             char c=str.charAt(str.length()-1-i);  
             if(c>='a'&&c<='f'||c>='A'&&c<='F'){  

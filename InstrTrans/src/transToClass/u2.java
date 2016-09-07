@@ -9,7 +9,7 @@ public class u2 {
     }
     
     
-    public u2(short temp) {
+    public u2(short u2) {
     	this.u2 = u2;
 	}
 

@@ -50,7 +50,13 @@ public class _sput extends Instruction {
     public boolean ifUpgrade(ArrayList<String> dexCode, int lineNum) {
         Register firstRegister = globalArguments.registerQueue.getByDexName(dexCode.get(1));
         firstRegister.updateType(lineNum, dexCode.get(2).substring(dexCode.get(2).lastIndexOf(":")+1));
-
+        
+        //为上一行const赋值
+        ArrayList<String> lastIns = globalArguments.rf.getInstruction(lineNum-1);
+        if(lastIns.get(0).contains("const") && lastIns.get(1).equals(firstRegister.dexName)){
+        	firstRegister.updateType(lineNum-1, dexCode.get(2).substring(dexCode.get(2).lastIndexOf(":")+1));
+        }
+        
         return true;
     }
 }

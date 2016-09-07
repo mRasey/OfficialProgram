@@ -39,12 +39,13 @@ public class method_info {
     	attributes_count.set((short) 1);
         //code 属性
         String codes = method_codes.get(method_id);
-        u1[] u1s = new u1[codes.length()];
-        //给u1数组赋值
-        for(int i = 0; i < codes.length(); i = i + 2) {
-            u1s[i] = new u1(Byte.parseByte(codes.charAt(i) + codes.charAt(i + 1) + ""));
-        }
-    	attributes[0] = new attribute_info(new u2((short) 3), new u4(codes.length() / 2), u1s);// code属性
+    	attributes[0] = new attribute_info(
+    	        3,
+                globalArguments.method_max_stack.get(method_id),
+                globalArguments.method_max_locals.get(method_id),
+                codes.length()/2,
+                codes,0
+        );// code属性
     }
     
     public String set_flag(){
@@ -52,7 +53,6 @@ public class method_info {
 		char[] bstr = "0000000000000000".toCharArray();
 		int i = 0;
 		for (i = 1; i < globalArguments.method_info.get(id).size()-1; i++) {
-			//System.out.println(globalArguments.method_info.get(id).get(i));
 			switch (globalArguments.method_info.get(id).get(i)) {
 			case "public":
 				bstr[15] = '1';
@@ -91,7 +91,7 @@ public class method_info {
 				bstr[3] = '1';
 				break;
 			default:
-				System.out.println("error in method/set_access_flags");
+				System.err.println("error in method/set_access_flags");
 				break;
 			}
 		}

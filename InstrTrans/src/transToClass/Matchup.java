@@ -23,10 +23,8 @@ public class Matchup {
             readIn = bfr.readLine();
         }
         bfr.close();
-//        for(String string : instrToHex.keySet())
-//            System.out.println(string + " " + instrToHex.get(string));
 
-        file = new File("res/test.txt");
+        file = new File("res/result.txt");
         bfr = new BufferedReader(new FileReader(file));
         readIn = "";
         while(!readIn.equals("{")) {
@@ -37,8 +35,8 @@ public class Matchup {
             codes.add(readIn);
             readIn = bfr.readLine();
         }while(!readIn.equals("}"));
-        for(String s : codes)
-            System.out.println(s);
+//        for(String s : codes)
+//            System.out.println(s);
     }
 
     /**
@@ -62,7 +60,6 @@ public class Matchup {
             String code = singleMethodCodes.get(i);
             if(isInstr(code.substring(code.indexOf(" ") + 1))) {
                 String instrName = code.split(" ")[1];
-//                System.err.println(instrName);
                 int instrSize = instrSizes.get(instrName);
                 if (instrName.contains("switch")) {
                     if(instrName.equals("tableswitch")) {
@@ -94,8 +91,8 @@ public class Matchup {
                         result = result + defaultHex + sumHex;
                         for(int index = 0; index < tabs.size() - 1; index++) {
                             result = result
-                                    + getHexN(Integer.parseInt(tabs.get(i).split(" ")[0]), 8)
-                                    + getHexN(Integer.parseInt(tabs.get(i).split(" ")[1]), 8);
+                                    + getHexN(Integer.parseInt(tabs.get(index).split(" ")[0]), 8)
+                                    + getHexN(Integer.parseInt(tabs.get(index).split(" ")[1]), 8);
                         }
                     }
                 }
@@ -105,8 +102,51 @@ public class Matchup {
                     if(code.contains("#"))
                         result = result + instrToHex.get(instrName)
                                 + getHexN(Integer.parseInt(code.split(" ")[2].substring(1)), (instrSize - 1) * 2);
-                    else
-                        result = result + getHexN(Integer.parseInt(code.split(" ")[2]), (instrSize - 1) * 2);
+                    else{
+                    	String ins = code.split(" ")[1];
+                    	String temp = code.split(" ")[2];
+                    	if(ins.equals("newarray")){
+                    		char type = temp.charAt(1);
+                    		switch(type){
+                    		case 'Z':
+                    			result = result +"04";
+                    			break;
+                    		case 'B':
+                    			result = result +"08";
+                    			break;
+                    		case 'S':
+                    			result = result +"09";
+                    			break;
+                    		case 'C':
+                    			result = result +"05";
+                    			break;
+                    		case 'J':
+                    			result = result +"0b";
+                    			break;
+                    		case 'F':
+                    			result = result +"06";
+                    			break;
+                    		case 'D':
+                    			result = result +"07";
+                    			break;
+                    		case 'I':
+                    			result = result +"0a";
+                    			break;
+                    		default:
+                    			System.err.println("error in Matchup/singleMethodDoTrans");
+                    			break;
+                    		}
+                    	}
+                    	else{
+                    		if(temp.startsWith("0x")){
+                        		result = result + instrToHex.get(instrName) + temp.substring(2);
+                        	}
+                        	else{
+                        		result = result + instrToHex.get(instrName) + getHexN(Integer.parseInt(code.split(" ")[2]), (instrSize - 1) * 2);
+                        	}
+                    	}
+                    	
+                    }
                 }
             }
         }
@@ -147,6 +187,6 @@ public class Matchup {
     public static void main(String[] args) throws IOException {
         new Optimize().initInstrSize();
         new Matchup().buildTransCode();
-        System.out.println(method_codes.get(0));
+        //System.out.println(method_codes.get(0));
     }
 }

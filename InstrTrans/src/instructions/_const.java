@@ -33,7 +33,7 @@ public class _const extends Instruction{
     	
         String dataType = "";
         dataType = firstRegister.getType(dexCodeNumber);
-       
+        //System.out.println(dexCodes[0]+" "+dexCodes[1]+" "+dexCodes[2]);
         switch (dexCodes[0]){
         	//char 应该放在哪里？？？
             case "const/4" :
@@ -64,11 +64,12 @@ public class _const extends Instruction{
             			globalArguments.finalByteCodePC += 2;
             			break;
             		default:
-            			System.err.println("error:");
+            			System.err.println("error in _const/analyze");
+            			System.err.println(globalArguments.dexCodeNumber);
             			for(int i=0; i<dexCodes.length;i++){
-            				System.err.println(globalArguments.dexCodeNumber);
             				System.err.print(dexCodes[i]+" ");
             			}
+            			System.out.println("");
             			break;
             	}
             	break;
@@ -94,9 +95,10 @@ public class _const extends Instruction{
             			globalArguments.finalByteCodePC += 2;
             			break;
             		default:
+            			System.err.println("error in _const/analyze");
+            			System.err.println(globalArguments.dexCodeNumber);
             			for(int i=0; i<dexCodes.length;i++){
             				System.err.print(dexCodes[i]+" ");
-            				
             			}
             			break;
             	}
@@ -119,135 +121,177 @@ public class _const extends Instruction{
         }
     }
 
-	@Override
-	public boolean ifUpgrade(ArrayList<String> firstDexCode, ArrayList<String> secondDexCode, ArrayList<String> thirdDexCode, int lineNum) {
-		if(thirdDexCode.get(0).equals(".local")) {
-			Register register = globalArguments.registerQueue.getByDexName(firstDexCode.get(1));
-			register.updateType(lineNum,
-					thirdDexCode.get(2).substring(thirdDexCode.get(2).lastIndexOf(":") + 1));
-		}
-		else if(secondDexCode.get(0).equals(".local")){
-			Register register = globalArguments.registerQueue.getByDexName(firstDexCode.get(1));
-			register.updateType(lineNum,
-					secondDexCode.get(2).substring(secondDexCode.get(2).lastIndexOf(":") + 1));
-		}
-		else if(secondDexCode.get(0).contains("sput") || secondDexCode.get(0).contains("sget")){
-			if(secondDexCode.get(1).equals(firstDexCode.get(1))){
-				Register register = globalArguments.registerQueue.getByDexName(secondDexCode.get(1));
-		        register.updateType(lineNum, secondDexCode.get(2).substring(secondDexCode.get(2).lastIndexOf(":")+1));
-			}
-			
-		}
-		else if(secondDexCode.get(0).contains("iput") || secondDexCode.get(0).contains("iget")){
-			if(secondDexCode.get(1).equals(firstDexCode.get(1))){
-				Register register = globalArguments.registerQueue.getByDexName(secondDexCode.get(1));
-		        register.updateType(lineNum, secondDexCode.get(3).substring(secondDexCode.get(3).lastIndexOf(":")+1));
-			}
-		}
-		else if(secondDexCode.get(0).contains("invoke")){
-			int i = 0, t = 0;
-			for(i=1;i<secondDexCode.size()-1;i++){
-				if(secondDexCode.get(i).equals(firstDexCode.get(1))){
-					t = 1;
-				}
-			}
-			if(t == 0){
-				Register register = globalArguments.registerQueue.getByDexName(firstDexCode.get(1));
-				if(register.currentType == null){
-					register.updateType(lineNum, "I");
-				}
-				else{
-					register.updateType(lineNum, register.currentType);
-					System.out.println(register.dexName +":" +register.currentType +" "+lineNum);
-				}
-			}
-			else{
-				new _invoke().ifUpgrade(secondDexCode,lineNum);
-			}
-		}
-		else if(secondDexCode.get(0).contains("if")){
-			if(secondDexCode.get(0).contains("z")){
-				Register register = globalArguments.registerQueue.getByDexName(secondDexCode.get(1));
-				register.updateType(lineNum, "I");
-	        }
-	        else{
-	            Register firstRegister = globalArguments.registerQueue.getByDexName(secondDexCode.get(1));
-	            firstRegister.updateType(lineNum, firstRegister.currentType);
-
-	            Register secondRegister = globalArguments.registerQueue.getByDexName(secondDexCode.get(2));
-	            secondRegister.updateType(lineNum, secondRegister.currentType);
-	            
-	            if(firstRegister.getType(lineNum) == null && secondRegister.getType(lineNum) != null){
-	            	firstRegister.updateType(lineNum,secondRegister.currentType);
-	            }
-	            else if(firstRegister.getType(lineNum) != null && secondRegister.getType(lineNum) == null){
-	            	secondRegister.updateType(lineNum,firstRegister.currentType);
-	            }
-	            else{
-	            }
-	            
-	        }
-		}
-		else if(secondDexCode.get(0).contains("aput") || secondDexCode.get(0).contains("aget")){
-			 Register firstRegister = globalArguments.registerQueue.getByDexName(secondDexCode.get(1));
-			 Register secondRegister = globalArguments.registerQueue.getByDexName(secondDexCode.get(2));
-	         firstRegister.updateType(lineNum, secondRegister.currentType.substring(secondRegister.currentType.indexOf("[") + 1));
-	         secondRegister.updateType(lineNum, secondRegister.currentType);
-		}
-		else if(secondDexCode.get(0).contains("return")){
-			if(secondDexCode.size() > 1){
-				if(secondDexCode.get(1).equals(firstDexCode.get(1))){
-					String methodInf = globalArguments.methodName;
-		            String dataType = methodInf.substring(methodInf.indexOf(")")+1);
-
-		            Register register = globalArguments.registerQueue.getByDexName(secondDexCode.get(1));
-		            register.updateType(lineNum, dataType);
-				}
-	            
-	        }
-		}
-		else if(  secondDexCode.get(0).contains("add-")
-                || secondDexCode.get(0).contains("sub-")
-                || secondDexCode.get(0).contains("mul-")
-                || secondDexCode.get(0).contains("div-")
-                || secondDexCode.get(0).contains("rem-")
-                || secondDexCode.get(0).contains("and-")
-                || secondDexCode.get(0).contains("or-")
-                || secondDexCode.get(0).contains("xor-")
-                || secondDexCode.get(0).contains("shl-")
-                || secondDexCode.get(0).contains("shr-")
-                || secondDexCode.get(0).contains("ushr-")){
-	        String dataType = secondDexCode.get(0).substring(secondDexCode.get(0).indexOf("-") + 1, secondDexCode.get(0).indexOf("-") + 2).toUpperCase();//获得数据类型
-	        if(dataType.equals("L")){
-	        	dataType = "J";
-	        }
-	        Register register = globalArguments.registerQueue.getByDexName(firstDexCode.get(1));
-	        if(secondDexCode.get(1).equals("v15")){
-	        	System.err.println(dataType);
-	        }
-	        if(secondDexCode.get(0).contains("/")){
-	        	if(secondDexCode.get(1).equals(firstDexCode.get(1)) || secondDexCode.get(2).equals(firstDexCode.get(1))){
-	        		register.updateType(lineNum, dataType);
-	        	}
-	        }
-	        else{
-	        	if(secondDexCode.get(1).equals(firstDexCode.get(1)) || secondDexCode.get(2).equals(firstDexCode.get(1)) || secondDexCode.get(3).equals(firstDexCode.get(1))){
-	        		register.updateType(lineNum, dataType);
-	        	}
-	        }
-		}
-		else {
-			Register register = globalArguments.registerQueue.getByDexName(firstDexCode.get(1));
-			if(register.currentType == null){
-				register.updateType(lineNum, "I");
-			}
-			else{
-				register.updateType(lineNum, register.currentType);
-				System.out.println(register.dexName +":" +register.currentType +" "+lineNum);
-			}
-			
-		}
-
-		return true;
-	}
+    public boolean ifUpgrade(ArrayList<String> firstDexCode, ArrayList<String> secondDexCode, ArrayList<String> thirdDexCode, int lineNum) {
+    	Register register = globalArguments.registerQueue.getByDexName(firstDexCode.get(1));
+    	if(register.getType(lineNum) == null){
+    		if(register.currentType != null){
+    			register.updateType(lineNum, register.currentType);
+    		}
+    		else{
+    			register.updateType(lineNum, "I");
+    		}
+    	}
+    	return true;
+    }
+    
+    
+//	@Override
+//	public boolean ifUpgrade(ArrayList<String> firstDexCode, ArrayList<String> secondDexCode, ArrayList<String> thirdDexCode, int lineNum) {
+//		boolean ifDeal = false;
+//		
+//		if(thirdDexCode.get(0).equals(".local")) {
+//			Register register = globalArguments.registerQueue.getByDexName(firstDexCode.get(1));
+//			if(register.dexName.equals(thirdDexCode.get(1))){
+//				register.updateType(lineNum,
+//						thirdDexCode.get(2).substring(thirdDexCode.get(2).lastIndexOf(":") + 1));
+//				ifDeal = true;
+//			}
+//			
+//		}
+//		if(secondDexCode.get(0).equals(".local")){
+//			Register register = globalArguments.registerQueue.getByDexName(firstDexCode.get(1));
+//			if(register.dexName.equals(secondDexCode.get(1))){
+//				register.updateType(lineNum,
+//						secondDexCode.get(2).substring(secondDexCode.get(2).lastIndexOf(":") + 1));
+//				ifDeal = true;
+//			}
+//			
+//		}
+//		if(secondDexCode.get(0).contains("sput") || secondDexCode.get(0).contains("sget")){
+//			if(secondDexCode.get(1).equals(firstDexCode.get(1))){
+//				Register register = globalArguments.registerQueue.getByDexName(secondDexCode.get(1));
+//		        register.updateType(lineNum, secondDexCode.get(2).substring(secondDexCode.get(2).lastIndexOf(":")+1));
+//		        ifDeal = true;
+//			}
+//			
+//		}
+//		if(secondDexCode.get(0).contains("iput") || secondDexCode.get(0).contains("iget")){
+//			if(secondDexCode.get(1).equals(firstDexCode.get(1))){
+//				Register register = globalArguments.registerQueue.getByDexName(secondDexCode.get(1));
+//		        register.updateType(lineNum, secondDexCode.get(3).substring(secondDexCode.get(3).lastIndexOf(":")+1));
+//		        ifDeal = true;
+//			}
+//		}
+//		if(secondDexCode.get(0).contains("invoke")){
+//			int i = 0, t = 0;
+//			for(i=1;i<secondDexCode.size()-1;i++){
+//				if(secondDexCode.get(i).equals(firstDexCode.get(1))){
+//					t = 1;
+//				}
+//			}
+//			if(t == 0){
+//			}
+//			else{
+//				new _invoke().ifUpgrade(secondDexCode,lineNum);
+//				ifDeal = true;
+//			}
+//		}
+//		if(secondDexCode.get(0).contains("if")){
+//			if(secondDexCode.get(0).contains("z")){
+//				if(secondDexCode.get(1).equals(firstDexCode.get(1))){
+//					Register register = globalArguments.registerQueue.getByDexName(secondDexCode.get(1));
+//					register.updateType(lineNum, "I");
+//					ifDeal = true;
+//				}
+//	        }
+//	        else{
+//	        	if(secondDexCode.get(1).equals(firstDexCode.get(1)) || secondDexCode.get(2).equals(firstDexCode.get(1))){
+//	        		ifDeal = true;
+//	        		Register firstRegister = globalArguments.registerQueue.getByDexName(secondDexCode.get(1));
+//		            firstRegister.updateType(lineNum, firstRegister.currentType);
+//		            Register secondRegister = globalArguments.registerQueue.getByDexName(secondDexCode.get(2));
+//		            secondRegister.updateType(lineNum, secondRegister.currentType);
+//		            if(firstRegister.getType(lineNum) == null && secondRegister.getType(lineNum) != null){
+//		            	firstRegister.updateType(lineNum,secondRegister.currentType);
+//		            }
+//		            else if(firstRegister.getType(lineNum) != null && secondRegister.getType(lineNum) == null){
+//		            	secondRegister.updateType(lineNum,firstRegister.currentType);
+//		            }
+//		            else{
+//		            }
+//	        	}
+//	        }
+//		}
+//		if(secondDexCode.get(0).contains("aput") || secondDexCode.get(0).contains("aget")){
+//			 Register firstRegister = globalArguments.registerQueue.getByDexName(secondDexCode.get(1));
+//			 Register secondRegister = globalArguments.registerQueue.getByDexName(secondDexCode.get(2));
+//	         firstRegister.updateType(lineNum, secondRegister.currentType.substring(secondRegister.currentType.indexOf("[") + 1));
+//	         secondRegister.updateType(lineNum, secondRegister.currentType);
+//	         if(secondDexCode.get(3).equals(firstDexCode.get(1))){
+//					Register register = globalArguments.registerQueue.getByDexName(firstDexCode.get(1));
+//					register.updateType(lineNum, "I");
+//					ifDeal = true;
+//			}
+//		}
+//		if(secondDexCode.get(0).contains("return")){
+//			if(secondDexCode.size() > 1){
+//				if(secondDexCode.get(1).equals(firstDexCode.get(1))){
+//					String methodInf = globalArguments.methodName;
+//		            String dataType = methodInf.substring(methodInf.indexOf(")")+1);
+//		            Register register = globalArguments.registerQueue.getByDexName(secondDexCode.get(1));
+//		            register.updateType(lineNum, dataType);
+//		            ifDeal = true;
+//				}
+//	            
+//	        }
+//		}
+//		if(  secondDexCode.get(0).contains("add-")
+//                || secondDexCode.get(0).contains("sub-")
+//                || secondDexCode.get(0).contains("mul-")
+//                || secondDexCode.get(0).contains("div-")
+//                || secondDexCode.get(0).contains("rem-")
+//                || secondDexCode.get(0).contains("and-")
+//                || secondDexCode.get(0).contains("or-")
+//                || secondDexCode.get(0).contains("xor-")
+//                || secondDexCode.get(0).contains("shl-")
+//                || secondDexCode.get(0).contains("shr-")
+//                || secondDexCode.get(0).contains("ushr-")){
+//	        String dataType = secondDexCode.get(0).substring(secondDexCode.get(0).indexOf("-") + 1, secondDexCode.get(0).indexOf("-") + 2).toUpperCase();//获得数据类型
+//	        if(dataType.equals("L")){
+//	        	dataType = "J";
+//	        }
+//	        Register register = globalArguments.registerQueue.getByDexName(firstDexCode.get(1));
+//	        if(secondDexCode.get(0).contains("/")){
+//	        	if(secondDexCode.get(1).equals(firstDexCode.get(1)) || secondDexCode.get(2).equals(firstDexCode.get(1))){
+//	        		register.updateType(lineNum, dataType);
+//	        		ifDeal = true;
+//	        	}
+//	        }
+//	        else{
+//	        	if(secondDexCode.get(1).equals(firstDexCode.get(1)) || secondDexCode.get(2).equals(firstDexCode.get(1)) || secondDexCode.get(3).equals(firstDexCode.get(1))){
+//	        		register.updateType(lineNum, dataType);
+//	        		ifDeal = true;
+//	        	}
+//	        }
+//		}
+//		if(secondDexCode.get(0).equals("new-array") || secondDexCode.get(0).equals("array-length")){
+//			if(secondDexCode.get(2).equals(firstDexCode.get(1))){
+//				Register register = globalArguments.registerQueue.getByDexName(firstDexCode.get(1));
+//				register.updateType(lineNum, "I");
+//				ifDeal = true;
+//			}
+//		}
+//		if(thirdDexCode.get(0).contains("aput") || thirdDexCode.get(0).contains("aget")){
+//			 Register firstRegister = globalArguments.registerQueue.getByDexName(thirdDexCode.get(1));
+//			 Register secondRegister = globalArguments.registerQueue.getByDexName(thirdDexCode.get(2));
+//	         firstRegister.updateType(lineNum, secondRegister.currentType.substring(secondRegister.currentType.indexOf("[") + 1));
+//	         secondRegister.updateType(lineNum, secondRegister.currentType);
+//	         if(thirdDexCode.get(3).equals(firstDexCode.get(1))){
+//					Register register = globalArguments.registerQueue.getByDexName(firstDexCode.get(1));
+//					register.updateType(lineNum, "I");
+//					ifDeal = true;
+//			}
+//		}
+//		if(!ifDeal){
+//			Register register = globalArguments.registerQueue.getByDexName(firstDexCode.get(1));
+//			if(register.currentType == null){
+//				register.updateType(lineNum, "I");
+//			}
+//			else{
+//				register.updateType(lineNum, register.currentType);
+//			}
+//		}
+//
+//		return true;
+//	}
 }

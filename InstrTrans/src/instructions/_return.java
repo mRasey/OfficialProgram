@@ -58,6 +58,13 @@ public class _return extends Instruction {
 
             Register register = globalArguments.registerQueue.getByDexName(dexCode.get(1));
             register.updateType(lineNum, dataType);
+            
+            ArrayList<String> lastIns = globalArguments.rf.getInstruction(lineNum-1);
+            if(lastIns.get(0).contains("const") && lastIns.get(1).equals(register.dexName)){
+            	register.updateType(lineNum-1, dataType);
+            }
+            
+            
             return true;
         }
         return false;

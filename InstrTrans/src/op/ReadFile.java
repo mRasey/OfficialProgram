@@ -81,7 +81,7 @@ public class ReadFile {
 	
 	//判断是否是一条指令
 	public boolean ifAnInstruction(String ins){
-		if(ins.charAt(0) >= 'a' && ins.charAt(0) <= 'z'){
+		if(ins.charAt(0) >= 'a' && ins.charAt(0) <= 'z' && !ins.contains("default")){
 			return true;
 		}
 		return false;

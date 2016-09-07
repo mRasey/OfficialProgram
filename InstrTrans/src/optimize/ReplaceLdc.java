@@ -45,7 +45,6 @@ public class ReplaceLdc {
 	
 	public String Dec_data(String data){
 		String new_code=number+" ";
-		//System.out.println(data);
 		int n = Integer.parseInt(data);
 		if(n >= 0 && n <=127){
 			String byte_str = Integer.toHexString(n);
@@ -146,7 +145,6 @@ public class ReplaceLdc {
 	          
 	        int sum=0;  
 	        int n=0;  
-	        //System.out.println(str);
 	        for(int i=0;i<str.length();i++){  
 	            char c=str.charAt(str.length()-1-i);  
 	            if(c>='a'&&c<='f'||c>='A'&&c<='F'){  

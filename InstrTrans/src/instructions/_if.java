@@ -46,7 +46,6 @@ public class _if extends Instruction{
             case "if-le" :
                 Register secondRegister = globalArguments.registerQueue.getByDexName(dexCodes[2]);
                 String secondDataType = secondRegister.getType(globalArguments.dexCodeNumber).toLowerCase();
-
                 if(secondDataType.equals("j"))
                     secondDataType = "l";
                 else if(secondDataType.equals("b") || secondDataType.equals("s") || secondDataType.equals("z") || secondDataType.equals("c"))
@@ -76,16 +75,76 @@ public class _if extends Instruction{
 
     @Override
     public boolean ifUpgrade(ArrayList<String> dexCode, int lineNum) {
+    	ArrayList<String> lastIns;
+    	Register register;
         if(dexCode.get(0).contains("z")){
             Register firstRegister = globalArguments.registerQueue.getByDexName(dexCode.get(1));
-            firstRegister.updateType(lineNum, firstRegister.currentType);
+            firstRegister.updateType(lineNum, "I");
+            lastIns = globalArguments.rf.getInstruction(lineNum-1);
+            if(lastIns.get(0).contains("const") && lastIns.get(1).equals(firstRegister.dexName)){
+            	firstRegister.updateType(lineNum-1, "I");
+            }
         }
         else{
             Register firstRegister = globalArguments.registerQueue.getByDexName(dexCode.get(1));
-            firstRegister.updateType(lineNum, firstRegister.currentType);
-
             Register secondRegister = globalArguments.registerQueue.getByDexName(dexCode.get(2));
-            secondRegister.updateType(lineNum, secondRegister.currentType);
+            if(firstRegister.currentType == null){
+            	firstRegister.updateType(lineNum, secondRegister.currentType);
+            }
+            else{
+            	firstRegister.updateType(lineNum, firstRegister.currentType);
+            }
+            if(secondRegister.currentType == null){
+            	secondRegister.updateType(lineNum, firstRegister.currentType);
+            }
+            else{
+            	secondRegister.updateType(lineNum, secondRegister.currentType);
+            }
+            
+            
+            
+            for(int i=1;i<=2;i++){
+            	lastIns = globalArguments.rf.getInstruction(lineNum-i);
+                if(lastIns.get(0).contains("const")){
+                	register = globalArguments.registerQueue.getByDexName(lastIns.get(1));
+                	if(register.dexName.equals(firstRegister.dexName) ){
+                    	if(register.currentType == null){
+                    		if(secondRegister.currentType == null){
+                    			System.err.println("error in _if");
+                    		}
+                    		else{
+                    			register.updateType(lineNum-i, secondRegister.currentType);
+                    		}
+                    	}
+                    	else{
+                    		register.updateType(lineNum-i, register.currentType);
+                    	}
+                    }
+                	else if(register.dexName.equals(secondRegister.dexName)){
+                		if(register.currentType == null){
+                    		if(firstRegister.currentType == null){
+                    			System.err.println("error in _if");
+                    		}
+                    		else{
+                    			register.updateType(lineNum-i, firstRegister.currentType);
+                    		}
+                    	}
+                    	else{
+                    		register.updateType(lineNum-i, register.currentType);
+                    	}
+                	}
+                	else{
+                		break;
+                	}
+                }
+                else{
+                	break;
+                }
+            }
+            
+            
+            
+        
         }
 
         return true;
