@@ -3,8 +3,8 @@
     <style>
         input[type="image"] {
             background: url("res/image/upload.png") no-repeat;
-            width: 50px;
-            height: 30px;
+            width: 128px;
+            height: 128px;
             border: none;
         }
 
@@ -55,22 +55,18 @@
         <div class="container">
             <header class="codrops-header">
                 <h1>北航论文格式在线校正系统<span>Please upload your file here.</span></h1>
-                <p>测试版</p>
+                <%--<p>测试版</p>--%>
             </header>
-            <%--<div align="center">--%>
-                <%--<form onsubmit="return checkFileType()" method="post" action="UploadFile.jsp" enctype="multipart/form-data">--%>
-                    <%--<input type="file" name="file" id="file"><br />--%>
-                    <%--<input type="submit" value="提交">--%>
-                <%--</form>--%>
-            <%--</div>--%>
             <div class="content">
                 <div class="box">
                     <form onsubmit="return checkFileType()" method="post" action="UploadFile.jsp" enctype="multipart/form-data">
                     <input type="file" name="file" id="file" class="inputfile inputfile-3" data-multiple-caption="{count} files selected" multiple />
                     <label for="file">
                     <span>Choose a file&hellip;</span></label>
+                    <br><br>
                     <%--<input type="file" name="file" id="file"><br />--%>
-                    <input type="submit" class="button" value="提交">
+                    <%--<input type="submit" class="button" value="提交">--%>
+                    <input name="imgbtn" type="image" src="res/image/upload.png">
                     <%--<a class="button" href="javascript:;" onclick="next();">提交</a>--%>
                     </form>
                 </div>
