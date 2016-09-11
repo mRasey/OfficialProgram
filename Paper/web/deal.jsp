@@ -9,6 +9,7 @@
 <%@ page import="java.lang.*" %>
 <%@ page import="java.io.*" %>
 <%@ page import="execPy.ExecPy" %>
+<%@ page import="opXML.AnalyXML" %>
 <html>
 <head>
     <title>论文格式修改</title>

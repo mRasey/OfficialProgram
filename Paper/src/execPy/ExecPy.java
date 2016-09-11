@@ -1,5 +1,7 @@
 package execPy;
 
+import opXML.AnalyXML;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -54,6 +56,16 @@ public class ExecPy {
 
             modifyProcess.waitFor();//等待modify程序执行完毕
             System.out.println("modify end");
+
+            try {
+                System.out.println("add comment start");
+                new AnalyXML(DataDirPath).run();
+                System.out.println("add comment end");
+            }
+            catch (Exception e) {
+                System.err.println("添加批注出现错误");
+                e.printStackTrace();
+            }
 
         } catch (Exception e) {
             e.printStackTrace();

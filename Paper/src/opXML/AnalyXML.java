@@ -15,15 +15,15 @@ import java.util.*;
  */
 public class AnalyXML {
 
+    private static String docPath = "C:\\Users\\Billy\\Desktop\\paper\\";// word文档的位置
+    private static final String docName = "origin";
+    private static String txtPath = docPath + "check_out.txt";//存储信息的TXT文件路径
+    private static String docXmlPath = docPath + docName + "/word/document.xml";//document.xml的文件路径
+    private static String contentTypeXmlPath = docPath + docName + "/[Content_Types].xml";
+    private static String docXmlRelsPath = docPath + docName + "/word/_rels/document.xml.rels";
     private static final String tempPath = String.valueOf(AnalyXML.class.getResource(""));
     private static final String classPath = tempPath.substring(tempPath.indexOf("/") + 1);
-    private static final String docPath = "C:\\Users\\Billy\\Desktop\\paper\\";// word文档的位置
-    private static final String docName = "origin";
-    private static final String txtPath = docPath + "check_out.txt";//存储信息的TXT文件路径
-    private static final String docXmlPath = docPath + docName + "/word/document.xml";//document.xml的文件路径
     private static final String comXmlPath = classPath + "comments.xml";//comment.xml的文件路径
-    private static final String contentTypeXmlPath = docPath + docName + "/[Content_Types].xml";
-    private static final String docXmlRelsPath = docPath + docName + "/word/_rels/document.xml.rels";
     private HashMap<Integer, ArrayList<String>> idToComment = new HashMap<>();
     private File txtFile;
     private File docXmlFile;
@@ -50,6 +50,19 @@ public class AnalyXML {
 //        System.out.println(currentTime);
     }
 
+    public AnalyXML(String docPath) {
+        this.docPath = docPath;
+        txtPath = docPath + "comment.txt";//存储信息的TXT文件路径
+        docXmlPath = docPath + docName + "/word/document.xml";//document.xml的文件路径
+        contentTypeXmlPath = docPath + docName + "/[Content_Types].xml";
+        docXmlRelsPath = docPath + docName + "/word/_rels/document.xml.rels";
+        txtFile = new File(txtPath);
+        docXmlFile = new File(docXmlPath);
+        comXmlFile = new File(comXmlPath);
+        contentTypeFile = new File(contentTypeXmlPath);
+        docXmlRelsFile = new File(docXmlRelsPath);
+    }
+
     /**
      * 读取段落和评论信息
      * @return this
@@ -61,17 +74,20 @@ public class AnalyXML {
         commentIdIndex = 0;
         while(readIn != null) {
 //            System.out.println(readIn);
-            if(readIn.contains("id")) {
+            if(readIn.contains("Id")) {
                 readIn = bfr.readLine();
                 ArrayList<String> comments = new ArrayList<>();
                 if(readIn != null) {
                     do {
                         comments.add(readIn);
                         readIn = bfr.readLine();
-                    } while (readIn != null && !readIn.startsWith("id"));
+                    } while (readIn != null && !readIn.startsWith("Id"));
                     idToComment.put(commentIdIndex, comments);
                     commentIdIndex++;
                 }
+            }
+            else {
+                readIn = bfr.readLine();
             }
         }
         bfr.close();
@@ -238,7 +254,7 @@ public class AnalyXML {
      * @throws IOException
      */
     public static void main(String[] args) throws IOException, DocumentException {
-        new AnalyXML().run();
+        new AnalyXML("C:\\Users\\Billy\\Desktop\\paper\\").run();
     }
 
 }

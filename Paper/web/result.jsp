@@ -25,7 +25,8 @@
     <div align="center">
         查看结果<br>
         <a href="checkTXTInfo.jsp?dirName=<%=dirName%>">查看错误信息</a><br>
-        <a href="checkWordResult.jsp?dirName=<%=dirName%>">下载Word文档</a>
+        <a href="checkWordResult.jsp?dirName=<%=dirName%>">下载Word文档</a><br>
+        <a href="checkWordWithComments.jsp?dirName=<%=dirName%>">下载带有批注的Word文档</a>
     </div>
 </body>
 <head>
