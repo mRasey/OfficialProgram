@@ -26,5 +26,6 @@
     <orderEntry type="library" name="library" level="project" />
     <orderEntry type="library" name="commons-fileupload-1.2.1" level="project" />
     <orderEntry type="library" name="dom4j-1.6.1" level="project" />
+    <orderEntry type="library" name="lib" level="project" />
   </component>
 </module>
