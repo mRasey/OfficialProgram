@@ -4,11 +4,12 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <html>
 <head>
-    <title>查看结果</title>
+    <title>正在处理</title>
     <link rel="stylesheet" type="text/css" href="css/css-title/normalize.css" />
     <link rel="stylesheet" type="text/css" href="fonts/font-awesome-4.2.0/css/font-awesome.min.css" />
     <link rel="stylesheet" type="text/css" href="css/css-title/demo.css" />
     <link rel="stylesheet" type="text/css" href="css/css-title/component.css" />
+    <link rel="stylesheet" type="text/css" href="css/css-button/button.css" />
 </head>
 <body>
     <%
@@ -28,7 +29,7 @@
             <%--<a href="checkTXTInfo.jsp?dirName=<%=dirName%>">查看错误信息</a><br>--%>
             <a href="checkWordResult.jsp?dirName=<%=dirName%>">修改过的Word文档</a><br><br>
             <a href="checkWordWithComments.jsp?dirName=<%=dirName%>">带有批注的原Word文档</a><br><br><br>
-            <a href="index.jsp">回到首页</a>
+            <a class="button" href="index.jsp">回到首页</a>
         </div>
     </div>
 </body>

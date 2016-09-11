@@ -79,7 +79,7 @@
                 }
                 out.println("</body>");
                 out.println("</html>");
-//            response.sendRedirect("uploadResult.jsp");//上传成功，跳转到上传结果界面
+//                response.sendRedirect("uploadResult.jsp");//上传成功，跳转到上传结果界面
             } catch (Exception ex) {
                 System.out.println(ex);
             }
@@ -98,5 +98,5 @@
         response.sendRedirect("showErrorInfo.jsp");
     }
 %>
-<jsp:forward page="deal.jsp"/>
+<jsp:forward page="uploadResult.jsp"/>
 </html>

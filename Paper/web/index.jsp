@@ -1,25 +1,38 @@
 <%@ page contentType="text/html;charset=gbk" language="java" %>
 <html lang="zh" class="no-js">
     <style>
+        input[type="image"] {
+            background: url("res/image/upload.png") no-repeat;
+            width: 50px;
+            height: 30px;
+            border: none;
+        }
+
+        input {
+            border: none;
+        }
 
     </style>
     <head>
-      <title>论文格式校正</title>
-      <link rel="stylesheet" type="text/css" href="css/css-title/normalize.css" />
-      <link rel="stylesheet" type="text/css" href="fonts/font-awesome-4.2.0/css/font-awesome.min.css" />
-      <link rel="stylesheet" type="text/css" href="css/css-title/demo.css" />
-      <link rel="stylesheet" type="text/css" href="css/css-title/component.css" />
+        <title>论文格式校正</title>
+        <link rel="stylesheet" type="text/css" href="css/css-title/normalize.css" />
+        <link rel="stylesheet" type="text/css" href="fonts/font-awesome-4.2.0/css/font-awesome.min.css" />
+        <link rel="stylesheet" type="text/css" href="css/css-title/demo.css" />
+        <link rel="stylesheet" type="text/css" href="css/css-title/component.css" />
 
-      <%--<meta charset="UTF-8">--%>
-      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <link rel="stylesheet" type="text/css" href="css/css-upload/normalize.css" />
-      <%--<link rel="stylesheet" type="text/css" href="css/css-upload/default.css" />--%>
-      <link rel="stylesheet" type="text/css" href="css/css-upload/component.css" />
-      <script>(function(e,t,n){
-          var r=e.querySelectorAll("html")[0];
-          r.className=r.className.replace(/(^|\s)no-js(\s|$)/,"$1js$2")})(document,window,0);
-      </script>
+        <%--<meta charset="UTF-8">--%>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="css/css-upload/normalize.css" />
+        <%--<link rel="stylesheet" type="text/css" href="css/css-upload/default.css" />--%>
+        <link rel="stylesheet" type="text/css" href="css/css-upload/component.css" />
+        <script>(function(e,t,n){
+            var r=e.querySelectorAll("html")[0];
+            r.className=r.className.replace(/(^|\s)no-js(\s|$)/,"$1js$2")})(document,window,0);
+        </script>
+
+        <link rel="stylesheet" type="text/css" href="css/css-button/button.css" />
+
     </head>
     <script language="JavaScript">
         function checkFileType() {
@@ -32,6 +45,10 @@
                 alert("请输入有效的.docx文件" + fileName);
                 return false;
             }
+        }
+
+        function next(){
+            document.all.form.submit();
         }
     </script>
     <body>
@@ -52,9 +69,9 @@
                     <input type="file" name="file" id="file" class="inputfile inputfile-3" data-multiple-caption="{count} files selected" multiple />
                     <label for="file">
                     <span>Choose a file&hellip;</span></label>
-                    <br>
                     <%--<input type="file" name="file" id="file"><br />--%>
-                    <input type="submit" value="提交">
+                    <input type="submit" class="button" value="提交">
+                    <%--<a class="button" href="javascript:;" onclick="next();">提交</a>--%>
                     </form>
                 </div>
             </div>

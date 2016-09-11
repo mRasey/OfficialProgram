@@ -21,12 +21,13 @@
 </body>
 <%
     try{
-        ExecPy.run((String) request.getAttribute("fileName"));
+        ExecPy.run(request.getParameter("fileName"));
+//        response.sendRedirect("result.jsp");
     }
     catch (Exception e) {
         response.sendRedirect("showErrorInfo.jsp");
     }
-    request.setAttribute("fileName", request.getAttribute("fileName"));
+    request.setAttribute("fileName", request.getParameter("fileName"));
 %>
 <jsp:forward page="result.jsp"/>
 </html>
