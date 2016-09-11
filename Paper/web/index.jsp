@@ -14,7 +14,7 @@
       <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <link rel="stylesheet" type="text/css" href="css/css-upload/normalize.css" />
-      <link rel="stylesheet" type="text/css" href="css/css-upload/default.css" />
+      <%--<link rel="stylesheet" type="text/css" href="css/css-upload/default.css" />--%>
       <link rel="stylesheet" type="text/css" href="css/css-upload/component.css" />
       <script>(function(e,t,n){
           var r=e.querySelectorAll("html")[0];
@@ -49,11 +49,11 @@
             <div class="content">
                 <div class="box">
                     <form onsubmit="return checkFileType()" method="post" action="UploadFile.jsp" enctype="multipart/form-data">
-                    <%--<input type="file" name="file" id="file" class="inputfile inputfile-3" data-multiple-caption="{count} files selected" multiple />--%>
-                    <%--<label for="file">--%>
-                    <%--<span>Choose a file&hellip;</span></label>--%>
-                    <%--<br>--%>
-                    <input type="file" name="file" id="file"><br />
+                    <input type="file" name="file" id="file" class="inputfile inputfile-3" data-multiple-caption="{count} files selected" multiple />
+                    <label for="file">
+                    <span>Choose a file&hellip;</span></label>
+                    <br>
+                    <%--<input type="file" name="file" id="file"><br />--%>
                     <input type="submit" value="Ìá½»">
                     </form>
                 </div>

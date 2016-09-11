@@ -27,7 +27,8 @@
             <%--查看结果<br><br>--%>
             <%--<a href="checkTXTInfo.jsp?dirName=<%=dirName%>">查看错误信息</a><br>--%>
             <a href="checkWordResult.jsp?dirName=<%=dirName%>">修改过的Word文档</a><br><br>
-            <a href="checkWordWithComments.jsp?dirName=<%=dirName%>">带有批注的原Word文档</a>
+            <a href="checkWordWithComments.jsp?dirName=<%=dirName%>">带有批注的原Word文档</a><br><br><br>
+            <a href="index.jsp">回到首页</a>
         </div>
     </div>
 </body>
