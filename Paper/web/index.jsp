@@ -55,6 +55,7 @@
         <div class="container">
             <header class="codrops-header">
                 <h1>北航论文格式在线校正系统<span>Please upload your file here.</span></h1>
+                <p>请将文件重命名为origin.docx</p>
                 <%--<p>测试版</p>--%>
             </header>
             <div class="content">
@@ -67,6 +68,7 @@
                     <%--<input type="file" name="file" id="file"><br />--%>
                     <%--<input type="submit" class="button" value="提交">--%>
                     <input name="imgbtn" type="image" src="res/image/upload.png">
+                    <div style="font-size: small">点击上传</div>
                     <%--<a class="button" href="javascript:;" onclick="next();">提交</a>--%>
                     </form>
                 </div>

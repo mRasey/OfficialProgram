@@ -30,6 +30,10 @@
             <a href="checkWordResult.jsp?dirName=<%=dirName%>">修改过的Word文档</a><br><br>
             <a href="checkWordWithComments.jsp?dirName=<%=dirName%>">带有批注的原Word文档</a><br><br><br>
             <a class="button" href="index.jsp">回到首页</a>
+            <br><br>
+            <p>
+                Microsoft Office 2007及以上的版本可在菜单栏的审阅栏目下找到“比较”来比对修改前后的不同
+            </p>
         </div>
     </div>
 </body>
