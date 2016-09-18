@@ -106,12 +106,14 @@ public class AnalyXML {
 //        Element newP = newComment.element("p");
 //        Element newR2 = newP.addElement("w:r");
 //        newR2.addElement("w:t");
-        for(String string : idToComment.get(commentIdIndex)) {
+        for (String string : idToComment.get(commentIdIndex)) {
             newComment.addElement("w:p");
             Element newP = (Element) newComment.elements("p").get(newComment.elements("p").size() - 1);
             newP.addElement("w:r");
             Element newR = newP.element("r");
             newR.addElement("w:t");
+            if(string.equals("correct"))
+                break;
             newR.element("t").addText(string);
         }
         commentIdIndex++;
