@@ -11,7 +11,7 @@
 <body>
     <div class="container">
         <header class="codrops-header">
-            <h1>北航论文格式在线校正系统<span>Please upload your file here.</span></h1>
+            <h1>北航毕设论文格式在线校正系统<span>（测试版）</span></h1>
             <%--<p>测试版</p>--%>
         </header>
     <%

@@ -54,8 +54,8 @@
     <body>
         <div class="container">
             <header class="codrops-header">
-                <h1>北航论文格式在线校正系统<span>Please upload your file here.</span></h1>
-                <p>请将文件重命名为origin.docx</p>
+                <h1>北航毕设论文格式在线校正系统<span>（测试版）</span></h1>
+                <p>注意：docx文件不要带有批注</p>
                 <%--<p>测试版</p>--%>
             </header>
             <div class="content">

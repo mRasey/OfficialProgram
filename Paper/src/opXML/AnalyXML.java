@@ -9,6 +9,7 @@ import java.io.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.function.Consumer;
 
 /**
  * 解析XML文件，加入批注
@@ -122,17 +123,40 @@ public class AnalyXML {
      * @return this
      */
     public AnalyXML addCommentsToDoc(Element p) {
-        List elements = p.elements("r");
-        // 插入在第一个w:r之前
-        elements.add(0, DocumentHelper.createElement("w:commentRangeStart"));
-        p.element("w:commentRangeStart").addAttribute("w:id", commentIdIndex + "");
-        elements.add(elements.size(), DocumentHelper.createElement("w:commentRangeEnd"));
-        p.element("w:commentRangeEnd").addAttribute("w:id", commentIdIndex + "");
-        elements.add(elements.size(), DocumentHelper.createElement("w:r"));
-        Element newR = (Element) p.elements("w:r").get(p.elements("w:r").size() - 1);
-        newR.addElement("w:commentReference");
-        newR.element("commentReference").addAttribute("w:id", commentIdIndex + "");
-        commentIdIndex++;
+        if(p.getName().equals("p")) {
+            List elements = p.elements("r");
+            // 插入在第一个w:r之前
+            elements.add(0, DocumentHelper.createElement("w:commentRangeStart"));
+            p.element("w:commentRangeStart").addAttribute("w:id", commentIdIndex + "");
+            elements.add(elements.size(), DocumentHelper.createElement("w:commentRangeEnd"));
+            p.element("w:commentRangeEnd").addAttribute("w:id", commentIdIndex + "");
+            elements.add(elements.size(), DocumentHelper.createElement("w:r"));
+            Element newR = (Element) p.elements("w:r").get(p.elements("w:r").size() - 1);
+            newR.addElement("w:commentReference");
+            newR.element("commentReference").addAttribute("w:id", commentIdIndex + "");
+            commentIdIndex++;
+        }
+        else if(p.getName().equals("tbl")) {
+            List trs = p.elements("tr");
+            trs.forEach(eachTr -> {
+                Element tr = (Element) eachTr;
+                List tcs = tr.elements("tc");
+                tcs.forEach(eachTc -> {
+                    Element newP = ((Element) eachTc).element("p");
+                    List elements = newP.elements("r");
+                    // 插入在第一个w:r之前
+                    elements.add(0, DocumentHelper.createElement("w:commentRangeStart"));
+                    newP.element("w:commentRangeStart").addAttribute("w:id", commentIdIndex + "");
+                    elements.add(elements.size(), DocumentHelper.createElement("w:commentRangeEnd"));
+                    newP.element("w:commentRangeEnd").addAttribute("w:id", commentIdIndex + "");
+                    elements.add(elements.size(), DocumentHelper.createElement("w:r"));
+                    Element newR = (Element) newP.elements("w:r").get(newP.elements("w:r").size() - 1);
+                    newR.addElement("w:commentReference");
+                    newR.element("commentReference").addAttribute("w:id", commentIdIndex + "");
+                    commentIdIndex++;
+                });
+            });
+        }
         return this;
     }
 
@@ -224,9 +248,10 @@ public class AnalyXML {
         }
 
         commentIdIndex = 0;
-        Iterator docPNodesItr = docDocument.getRootElement().element("body").elements("p").iterator();
+        Iterator docPNodesItr = docDocument.getRootElement().element("body").elements().iterator();
         while(docPNodesItr.hasNext()) {
             Element nextPNode = (Element) docPNodesItr.next();
+            System.out.println(nextPNode.getName());
             addCommentsToDoc(nextPNode);
         }
 
