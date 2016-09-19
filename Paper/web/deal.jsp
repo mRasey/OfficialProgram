@@ -10,6 +10,7 @@
 <%@ page import="java.io.*" %>
 <%@ page import="execPy.ExecPy" %>
 <%@ page import="opXML.AnalyXML" %>
+<%@ page import="java.net.URLEncoder" %>
 <html>
 <head>
     <title>论文格式修改</title>
@@ -21,13 +22,14 @@
 </body>
 <%
     try{
-        ExecPy.run(request.getParameter("fileName"));
-//        response.sendRedirect("result.jsp");
+//        new Thread(new ExecPy(request.getParameter("fileName"))).start();
+        String url = "result.jsp?fileName=" + request.getParameter("fileName");
+        response.sendRedirect(url);
+//        response.sendRedirect(URLEncoder.encode(url,"GBK"));
     }
     catch (Exception e) {
         response.sendRedirect("showErrorInfo.jsp");
     }
-    request.setAttribute("fileName", request.getParameter("fileName"));
+//    request.setAttribute("fileName", request.getParameter("fileName"));
 %>
-<jsp:forward page="result.jsp"/>
 </html>

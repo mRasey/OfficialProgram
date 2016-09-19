@@ -6,9 +6,16 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-public class ExecPy {
+public class ExecPy implements Runnable{
 
-    public static void run(String docFileName) throws IOException, InterruptedException {
+    private String docFileName;
+
+    public ExecPy(String docFileName) {
+        this.docFileName = docFileName;
+    }
+
+    @Override
+    public void run() {
 
         String classPath = String.valueOf(ExecPy.class.getResource(""));
         classPath = classPath.substring(classPath.indexOf("/") + 1);

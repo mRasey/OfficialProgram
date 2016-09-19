@@ -55,7 +55,7 @@
         <div class="container">
             <header class="codrops-header">
                 <h1>北航毕设论文格式在线校正系统<span>（测试版）</span></h1>
-                <p>注意：请将论文命名为：学号_姓名.docx，docx文件不要带有批注</p>
+                <p>注意：请将论文命名为：学号.docx，不要带有中文，docx文件不要带有批注</p>
                 <%--<p>测试版</p>--%>
             </header>
             <div class="content">

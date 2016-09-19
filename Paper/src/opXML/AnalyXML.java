@@ -253,7 +253,7 @@ public class AnalyXML {
         Iterator docPNodesItr = docDocument.getRootElement().element("body").elements().iterator();
         while(docPNodesItr.hasNext()) {
             Element nextPNode = (Element) docPNodesItr.next();
-            System.out.println(nextPNode.getName());
+//            System.out.println(nextPNode.getName());
             addCommentsToDoc(nextPNode);
         }
 

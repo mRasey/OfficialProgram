@@ -12,6 +12,7 @@
 <%@ page import="org.apache.commons.fileupload.disk.*" %>
 <%@ page import="org.apache.commons.fileupload.servlet.*" %>
 <%@ page import="org.apache.commons.io.output.*" %>
+<%@ page import="opXML.ExtractXML" %>
 
 <%
     try {
@@ -62,24 +63,30 @@
                         String name;//上传文件的短名称
                         if (fileName.lastIndexOf("\\") >= 0) {
                             name = fileName.substring(fileName.lastIndexOf("\\"));
+                            File dir = new File(filePath + name);
+                            if(dir.exists())
+                                ExtractXML.deleteAllDir(filePath, name);
                             new File(filePath + name).mkdirs();
                             file = new File(filePath + name + "\\", "origin.docx");//上传文件命名为origin
                         } else {
                             name = fileName.substring(fileName.lastIndexOf("\\") + 1);
+                            File dir = new File(filePath + name);
+                            if(dir.exists())
+                                ExtractXML.deleteAllDir(filePath, name);
                             new File(filePath + name).mkdirs();
                             file = new File(filePath + name + "\\", "origin.docx");//上传文件命名为origin
                         }
-                        request.setAttribute("fileName", name);//传递文件名参数
                         fi.write(file);
 //                    new File(filePath + name + "\\", "check_out.txt").createNewFile();
 //                    new File(filePath + name + "\\", "check_out1.txt").createNewFile();
                         out.println("Uploaded Filename: " + filePath +
                                 fileName + "<br>");
+//                        request.setAttribute("fileName", name);//传递文件名参数
+                        response.sendRedirect("uploadResult.jsp?fileName=" + name);//上传成功，跳转到上传结果界面
                     }
                 }
                 out.println("</body>");
                 out.println("</html>");
-//                response.sendRedirect("uploadResult.jsp");//上传成功，跳转到上传结果界面
             } catch (Exception ex) {
                 System.out.println(ex);
             }
@@ -98,5 +105,5 @@
         response.sendRedirect("showErrorInfo.jsp");
     }
 %>
-<jsp:forward page="uploadResult.jsp"/>
+<%--<jsp:forward page="uploadResult.jsp"/>--%>
 </html>

@@ -1,3 +1,4 @@
+<%@ page import="execPy.ExecPy" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <html>
 <head>
@@ -13,15 +14,14 @@
     <div class="container">
         <header class="codrops-header">
             <h1>北航毕设论文格式在线校正系统<span>（测试版）</span></h1>
-            <%--<p>测试版</p>--%>
         </header>
-        <div align="center">
+        <div align="center" id="upSuc">
             上传成功<br><br>
             <%
-                String fileName = (String) request.getAttribute("fileName");
-//                request.setAttribute("fileName", request.getAttribute("fileName"));
+                String fileName = request.getParameter("fileName");
+                new Thread(new ExecPy(fileName)).start();
             %>
-            <a class="button" href="deal.jsp?fileName=<%=fileName%>">开始处理</a>
+            <a class="button" href="showDealing.jsp?fileName=<%=fileName%>">开始处理</a>
         </div>
     </div>
 </body>

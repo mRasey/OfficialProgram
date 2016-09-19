@@ -13,7 +13,7 @@
 </head>
 <body>
     <%
-        String dirName = (String) request.getAttribute("fileName");
+        String dirName = request.getParameter("fileName");
         String dirPath = "data/";
         String txtPath = dirPath + dirName + "/" + "check_out.txt";
         String wordPath = dirPath + dirName + "/" + "result.docx";
