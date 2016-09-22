@@ -4,7 +4,7 @@
     <title>正在处理</title>
 </head>
 <body>
-    正在处理。。。
+
 </body>
 <%@ page import="java.io.*,java.util.*, javax.servlet.*" %>
 <%@ page import="javax.servlet.http.*" %>
@@ -16,14 +16,14 @@
 
 <%
     try {
-//    String fileSavePath = "C:\\Users\\Billy\\Documents\\GitHub\\Java\\Paper\\data";
         String fileCode = (String) System.getProperties().get("file.encoding");
         File file;
         int maxFileSize = 5000 * 1024;
         int maxMemSize = 5000 * 1024;
         ServletContext context = pageContext.getServletContext();
-//    String filePath = context.getInitParameter("file-upload");
-        String filePath = "C:\\Users\\Billy\\Documents\\GitHub\\OfficialProgram\\Paper\\data\\";
+        String filePath = request.getSession().getServletContext().getRealPath("/") + "data/";
+//        System.err.println(dirPath);
+//        String filePath = "C:\\Users\\Billy\\Documents\\GitHub\\OfficialProgram\\Paper\\data\\";
         // 验证上传内容了类型
         String contentType = request.getContentType();
         if ((contentType.indexOf("multipart/form-data") >= 0)) {
@@ -79,15 +79,14 @@
                         fi.write(file);
 //                    new File(filePath + name + "\\", "check_out.txt").createNewFile();
 //                    new File(filePath + name + "\\", "check_out1.txt").createNewFile();
-                        out.println("Uploaded Filename: " + filePath +
-                                fileName + "<br>");
-//                        request.setAttribute("fileName", name);//传递文件名参数
-                        response.sendRedirect("uploadResult.jsp?fileName=" + name);//上传成功，跳转到上传结果界面
+                        out.println("Uploaded Filename: " + filePath + fileName + "<br>");
+                        response.sendRedirect("uploadResult.jsp?dirPath=" + filePath + "&fileName=" + name);//上传成功，跳转到上传结果界面
                     }
                 }
                 out.println("</body>");
                 out.println("</html>");
             } catch (Exception ex) {
+                response.sendRedirect("showErrorInfo.jsp");
                 System.out.println(ex);
             }
         } else {
@@ -105,5 +104,4 @@
         response.sendRedirect("showErrorInfo.jsp");
     }
 %>
-<%--<jsp:forward page="uploadResult.jsp"/>--%>
 </html>

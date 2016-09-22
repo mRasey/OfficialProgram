@@ -14,7 +14,7 @@
 
     </style>
     <head>
-        <title>论文格式校正</title>
+        <title>首页</title>
         <link rel="stylesheet" type="text/css" href="css/css-title/normalize.css" />
         <link rel="stylesheet" type="text/css" href="fonts/font-awesome-4.2.0/css/font-awesome.min.css" />
         <link rel="stylesheet" type="text/css" href="css/css-title/demo.css" />
@@ -26,15 +26,15 @@
         <link rel="stylesheet" type="text/css" href="css/css-upload/normalize.css" />
         <%--<link rel="stylesheet" type="text/css" href="css/css-upload/default.css" />--%>
         <link rel="stylesheet" type="text/css" href="css/css-upload/component.css" />
+        <link rel="stylesheet" type="text/css" href="css/css-button/button.css" />
         <script>(function(e,t,n){
             var r=e.querySelectorAll("html")[0];
             r.className=r.className.replace(/(^|\s)no-js(\s|$)/,"$1js$2")})(document,window,0);
         </script>
 
-        <link rel="stylesheet" type="text/css" href="css/css-button/button.css" />
 
     </head>
-    <script language="JavaScript">
+    <script>
         function checkFileType() {
             var fileName = document.getElementById("file").value;
             var postfix = fileName.substring(fileName.length - 5, fileName.length);
@@ -46,17 +46,12 @@
                 return false;
             }
         }
-
-        function next(){
-            document.all.form.submit();
-        }
     </script>
     <body>
         <div class="container">
             <header class="codrops-header">
                 <h1>北航毕设论文格式在线校正系统<span>（测试版）</span></h1>
                 <p>注意：请将论文命名为：学号.docx，不要带有中文，docx文件不要带有批注</p>
-                <%--<p>测试版</p>--%>
             </header>
             <div class="content">
                 <div class="box">

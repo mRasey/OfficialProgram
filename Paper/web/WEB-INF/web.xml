@@ -1,6 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+<web-app xmlns="http://java.sun.com/xml/ns/javaee"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
-         version="3.1">
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+         version="3.0">
+    <servlet>
+        <description/>
+        <display-name>Scan</display-name>
+        <servlet-name>Scan</servlet-name>
+        <servlet-class>servlets.Scan</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>Scan</servlet-name>
+        <url-pattern>/Scan</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <description/>
+        <display-name>DealServlet</display-name>
+        <servlet-name>DealServlet</servlet-name>
+        <servlet-class>servlets.DealServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>DealServlet</servlet-name>
+        <url-pattern>/DealServlet</url-pattern>
+    </servlet-mapping>
 </web-app>

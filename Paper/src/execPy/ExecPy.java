@@ -9,9 +9,11 @@ import java.io.InputStreamReader;
 public class ExecPy implements Runnable{
 
     private String docFileName;
+    private String dirPath;
 
-    public ExecPy(String docFileName) {
+    public ExecPy(String dirPath, String docFileName) {
         this.docFileName = docFileName;
+        this.dirPath = dirPath;
     }
 
     @Override
@@ -23,7 +25,7 @@ public class ExecPy implements Runnable{
 //        String PyDirPath = "C:/Users/Billy/Documents/GitHub/OfficialProgram/Paper/web/";
         String checkPy = /*PyDirPath + */classPath + "check.py";
         String modifyPy = /*PyDirPath + */classPath + "modify.py";
-        String DataDirPath = "C:/Users/Billy/Documents/GitHub/OfficialProgram/Paper/data/" + docFileName + "/";
+        String DataDirPath = dirPath + docFileName + "/";
 
         try {
 

@@ -9,8 +9,8 @@
 <body>
 <%
     try {
-        String absolutePath = "C:/Users/Billy/Documents/GitHub/OfficialProgram/Paper/data/";
-        String dirName = request.getParameter("dirName");
+        String dirPath = request.getParameter("dirPath");
+        String fileName = request.getParameter("fileName");
         response.setContentType("application/msword");
         response.setHeader("Content-disposition", "attachment; filename=resultWithComments.docx");
         BufferedInputStream bis = null;
@@ -18,7 +18,7 @@
         try {
             bis = new BufferedInputStream(
                     new FileInputStream(
-                            new File(absolutePath + dirName + "/resultWithComments.docx")));
+                            new File(dirPath + fileName + "/resultWithComments.docx")));
             bos = new BufferedOutputStream(response.getOutputStream());
             byte[] buff = new byte[2048];
             int bytesRead;
