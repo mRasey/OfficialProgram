@@ -19,6 +19,8 @@
     <%--<link rel="stylesheet" type="text/css" href="css/css-loading/bootstrap.min.css">--%>
     <%--<link rel="stylesheet" type="text/css" href="css/css-loading/htmleaf-demo.css">--%>
     <link rel="stylesheet" type="text/css" href="css/css-loading/loading.css">
+    <link rel="stylesheet" href="dist/styles/Vidage.css" />
+
 
 </head>
 <%--<script type="text/javascript" src="js/jquery-2.1.1.min.js"></script>--%>
@@ -71,10 +73,28 @@
             </div>
         </div>
         <div align="center" id="upSuc">
-            上传成功
+            <p style="color:white">上传成功</p>
             <br><br>
             <a class="button" id="start" onclick="loopingAsk()">开始处理</a>
         </div>
     </div>
+
+    <div class="Vidage">
+        <div class="Vidage__image"></div>
+
+        <video id="VidageVideo" class="Vidage__video" preload="metadata" loop autoplay muted>
+            <source src="videos/bg.webm" type="video/webm">
+            <source src="videos/bg.mp4" type="video/mp4">
+        </video>
+
+        <div class="Vidage__backdrop"></div>
+    </div>
+
+
+    <!-- Vidage init -->
+    <script src="dist/scripts/Vidage.min.js"></script>
+    <script>
+        new Vidage('#VidageVideo');
+    </script>
 </body>
 </html>

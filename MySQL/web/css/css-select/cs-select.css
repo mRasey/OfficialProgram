@@ -1,5 +1,5 @@
 /* Default custom select styles */
-div.cs-select {
+.cs-select {
 	display: inline-block;
 	vertical-align: middle;
 	position: relative;
@@ -16,7 +16,7 @@ div.cs-select {
 	user-select: none;
 }
 
-div.cs-select:focus {
+.cs-select:focus {
 	outline: none; /* For better accessibility add a style for this in your skin */
 }
 

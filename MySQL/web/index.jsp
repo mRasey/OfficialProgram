@@ -14,6 +14,7 @@
       <link rel="stylesheet" type="text/css" href="css/css-login/normalize.css" >
       <link rel="stylesheet" type="text/css" href="css/css-select/cs-select.css" >
       <link rel="stylesheet" type="text/css" href="css/css-select/cs-skin-border.css" >
+      <link rel="stylesheet" href="dist/dist-bg/styles/Vidage.css" />
 
       <script type="text/javascript" src="js/jquery-3.1.0.js"></script>
       <script type="text/javascript" src="js/select/classie.js"></script>
@@ -129,7 +130,7 @@
                       <input type="password" placeholder="确认密码" id="r_confirm_password" />
                       <input type="text" placeholder="电子邮件" id="r_emial"/>
                       <section>
-                          <select id="job">
+                          <select id="job" class="cs-select cs-skin-border">
                               <option value="" disabled selected>请选择职业...</option>
                               <option value="email">E-Mail</option>
                               <option value="twitter">Twitter</option>
@@ -150,5 +151,23 @@
               </div>
           </div>
       </div>
+
+      <div class="Vidage">
+          <div class="Vidage__image"></div>
+
+          <video id="VidageVideo" class="Vidage__video" preload="metadata" loop autoplay muted>
+              <source src="videos/bg.webm" type="video/webm">
+              <source src="videos/bg.mp4" type="video/mp4">
+          </video>
+
+          <div class="Vidage__backdrop"></div>
+      </div>
+
+
+      <!-- Vidage init -->
+      <script src="dist/dist-bg/scripts/Vidage.min.js"></script>
+      <script>
+          new Vidage('#VidageVideo');
+      </script>
   </body>
 </html>
