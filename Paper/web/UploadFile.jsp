@@ -16,6 +16,7 @@
 
 <%
     try {
+        System.err.println("in uploadFile");
         String fileCode = (String) System.getProperties().get("file.encoding");
         File file;
         int maxFileSize = 5000 * 1024;

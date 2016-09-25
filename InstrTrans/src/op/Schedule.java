@@ -5,10 +5,14 @@ import instructions.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Schedule {
 
 	ArrayList<String> instruction;
+	//在setMethodInf()清空，在endMethod()传给localToLine
+	ArrayList<String> local;
+	ArrayList<String> line;
 	
 	String regex1 = "[p,v]\\d+";
 	String regex2 = ";->";
@@ -39,6 +43,9 @@ public class Schedule {
 			else if(instruction.get(0).equals(".super")){
 				setSupClassInf();
 			}
+			else if(instruction.get(0).equals(".source")){
+				globalArguments.sourceFile = instruction.get(1).substring(1, instruction.get(1).length()-1);
+			}
 			//记录接口信息
 			else if(instruction.get(0).equals(".implements")){
 				setInterfaceInf();
@@ -50,10 +57,6 @@ public class Schedule {
 			//记录寄存器类型
 			else if(instruction.get(0).equals(".param")){
 				dealParam();
-			}
-			//.local声明的变量为非临时变量
-			else if(instruction.get(0).equals(".local")){
-				dealLocal();
 			}
 			//为寄存器分配栈空间
 			else if(globalArguments.rf.ifAnInstruction(instruction.get(0))){
@@ -76,6 +79,10 @@ public class Schedule {
 		globalArguments.finalByteCodePC++;
 		globalArguments.method_info.add(instruction);
 		globalArguments.method_count++;
+		local = new ArrayList<>();
+		line = new ArrayList<>();
+		local.add(".local this, nnn");
+		line.add(".line 0");
 	}
 
 	public void setClassInf(){
@@ -109,8 +116,7 @@ public class Schedule {
 		else{
 			local_reg_number++;
 		}
-		
-		int order = globalArguments.LineNumber; //当前.local的标号
+		int order = method_begin_number; //当前.local的标号
 		ArrayList<String> lastIns;
 		//分配栈
 		Register register = globalArguments.registerQueue.getByDexName(instruction.get(1)); //.local指定的寄存器
@@ -130,16 +136,55 @@ public class Schedule {
 				order--;
 				continue;
 			}
-			else if(lastIns.get(0).contains("const") && lastIns.get(1).equals(register.dexName)){
-				register.updateType(order, datatype);
+			else if(lastIns.get(0).equals("goto")){
+				order--;
+				continue;
+			}
+			else if(globalArguments.rf.ifAnInstruction(lastIns.get(0))){
+				for(int i = 1;i<lastIns.size();i++){
+					if(lastIns.get(i).equals(register.dexName)){
+						register.updateType(order, datatype);
+						break;
+					}
+				}
 				break;
 			}
 			else{
 				break;
 			}
-		}while(order >=0);
+		}while(order >= 0);
 		
-		
+		//保存local于对应的行号
+		String localStr = "";
+		String lineStr = "";
+		localStr = instruction.get(0) +" "+ instruction.get(1)+" " + instruction.get(2);
+		order = method_begin_number-1;
+		do{
+			lastIns = globalArguments.rf.getInstruction(order);
+			if(lastIns.get(0).equals(".line")){
+				do{
+					order--;
+					lastIns = globalArguments.rf.getInstruction(order);
+				}while(!lastIns.get(0).equals(".line"));
+				lineStr = lastIns.get(0) +" "+ lastIns.get(1);
+				local.add(localStr);
+				line.add(lineStr);
+				break;
+			}
+			else if(globalArguments.rf.ifAnInstruction(lastIns.get(0))){
+				while(!lastIns.get(0).equals(".line")){
+					order--;
+					lastIns = globalArguments.rf.getInstruction(order);
+				}
+				lineStr = lastIns.get(0) +" "+ lastIns.get(1);
+				local.add(localStr);
+				line.add(lineStr);
+				break;
+			}
+			else{
+				order--;
+			}
+		}while(order >= 0);
 	}
 	
 	public void addNewReg(){
@@ -159,8 +204,7 @@ public class Schedule {
 	}
 	
 	public void endMethod() throws IOException{
-		//保存方法的局部变量个数
-		set_max_locals();
+		
 		
 		int temp = method_begin_number;
         //获取寄存器类型
@@ -226,12 +270,23 @@ public class Schedule {
                     System.out.println("error instruction");
                 }
             }
+            //.local声明的变量为非临时变量
+			else if(instruction.get(0).equals(".local")){
+                globalArguments.finalByteCode.add(instruction.get(0)+" "+instruction.get(1)+" "+instruction.get(2));
+                globalArguments.finalByteCodePC ++;
+				dealLocal();
+			}
 			//处理标签: 和获取数组数据
 			else if(instruction.get(0).startsWith(":")){
 				dealLabel();
 			}
 			method_begin_number++;
 		}
+        //保存方法的local-line
+      	globalArguments.method_local.add(local);
+      	globalArguments.method_line.add(line);
+        //保存方法的局部变量个数
+        set_max_locals();
         
         globalArguments.switchDefaultIndex = 0;
         method_begin_number = temp;
@@ -284,10 +339,8 @@ public class Schedule {
         globalArguments.finalByteCode.add(".end method");
 		globalArguments.finalByteCodePC++;
         
-        
         //指令优化，要放在处理跳转之前
         globalArguments.op.clear().readInf().initStackSize().initInstrSize().dispatchCodes().deal().output();
-        //globalArguments.op.clear().readInf().initInstrSize().dispatchCodes().deal().output();
 		//处理跳转
         globalArguments.tt.clear();
         globalArguments.tt.readInf();
@@ -360,7 +413,7 @@ public class Schedule {
 
 	public void set_max_locals(){
 		String types =  globalArguments.methodName.substring(globalArguments.methodName.indexOf("(")+1,globalArguments.methodName.indexOf(")")+1);
-		int i = 0,argNumber = 1;
+		int i = 0,argNumber = 0;
 		while (!types.equals(")")) {
 			if (types.startsWith("L")) {
 				argNumber++;
@@ -377,13 +430,14 @@ public class Schedule {
 				} else {
 					argNumber++;
 				}
-			} else {
+			}
+			else {
 				argNumber++;
 			}
 			types = types.substring(1);
 		}
 		
-		
-		globalArguments.method_max_locals.add(local_reg_number+argNumber);
+		//多一个this
+		globalArguments.method_max_locals.add(local_reg_number+1+argNumber);
 	}
 }

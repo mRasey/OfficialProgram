@@ -58,6 +58,7 @@ public class Optimize {
      * @return
      */
     public Optimize dispatchCodes() {
+    	//System.out.println("in1");
         String code;
         int i = 0;
         code = byteCodes.get(i);
@@ -74,8 +75,12 @@ public class Optimize {
                     }
                     singleMethod.addNewLine(singleLine);
                 }
+                else{
+                	i++;
+                }
             }
         }
+        //System.out.println("out1");
         return this;
     }
 
@@ -211,6 +216,7 @@ public class Optimize {
             ArrayList<String> byteCodes = singleLine.byteCodes;
             for(int i = 0; i < byteCodes.size(); i++) {
                 String byteCode = byteCodes.get(i);
+                
                 if(globalArguments.rf.ifAnInstruction(byteCode)) {
                 	if(byteCode.contains("switch")) {
                 	    String tempFlag = byteCode;// 记录下switch的类型
@@ -230,12 +236,14 @@ public class Optimize {
                         else
                             lineIndex = lineIndex + 8 + (codes.size() - 1) * 8;// lookupswitch
                     }
-                	else{
+                	else{     		
                         int instrSize = instrSizes.get(byteCode.split(" ")[0]);
                         byteCode = lineIndex + ": " + byteCode;
+//                        if(byteCode.contains("ldc")){
+//                        	System.out.println(byteCode);
+//                        }
                         lineIndex += instrSize;
                         byteCodes.set(i, byteCode);
-                       
                 	}
                 }
             }
@@ -295,6 +303,7 @@ public class Optimize {
                 }
             }
         }
+        //System.out.println(maxStack);
         return maxStack;
     }
 

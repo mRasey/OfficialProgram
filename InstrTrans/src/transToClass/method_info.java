@@ -10,21 +10,21 @@ public class method_info {
     u2 name_index = new u2();
     u2 descriptor_index = new u2();
     u2 attributes_count = new u2((short) 1);
-    attribute_info[] attributes = new attribute_info[1];
+    code_attribute_info code_attributes;
 
     int id = 0;
     
     @Override
     public String toString() {
         String attributes_string = "";
-        for(int i = 0; i < attributes_count.get(); i++)
-            attributes_string += attributes[i].toString();
+        attributes_string += code_attributes.toString();
         return access_flags.toString()
                 + name_index.toString()
                 + descriptor_index.toString()
                 + attributes_count.toString()
                 + attributes_string;
     }
+
     
     public void set_info(int method_id){
     	this.id = method_id;
@@ -39,8 +39,9 @@ public class method_info {
     	attributes_count.set((short) 1);
         //code 属性
         String codes = method_codes.get(method_id);
-    	attributes[0] = new attribute_info(
-    	        3,
+        code_attributes = new code_attribute_info(
+        		method_id,
+    	        5,
                 globalArguments.method_max_stack.get(method_id),
                 globalArguments.method_max_locals.get(method_id),
                 codes.length()/2,

@@ -107,7 +107,7 @@ public class ReplaceLdc {
 			while (int_str.length() < 8) {
 				int_str = "0" + int_str;
 			}
-			new_code = "ldc" + " " + "0x" + int_str;
+			new_code += "ldc" + " " + "0x" + int_str;
 		} 
 		else {
 			System.err.println("error in replaceLdc/Hex_data");

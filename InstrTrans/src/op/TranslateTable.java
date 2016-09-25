@@ -28,7 +28,8 @@ public class TranslateTable {
 			
 			if(byteCode[0].startsWith(":")){
 				int i = 1;
-				while(globalArguments.optimizedByteCode.get(finishedByteCodeNumber+i).startsWith(":")){
+				while(globalArguments.optimizedByteCode.get(finishedByteCodeNumber+i).startsWith(":")
+						|| globalArguments.optimizedByteCode.get(finishedByteCodeNumber+i).startsWith(".")){
 					i++;
 				}
 				String number = globalArguments.optimizedByteCode.get(finishedByteCodeNumber+i).split(" ")[0].replace(":", "");

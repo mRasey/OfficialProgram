@@ -80,7 +80,7 @@ public class _neg_not_to extends Instruction {
     @Override
     public boolean ifUpgrade(ArrayList<String> dexCode, int lineNum) {
         if(dexCode.get(0).contains("to")){
-            String firstDataType = (dexCode.get(0).charAt(0)+"").toUpperCase();
+            String firstDataType = (dexCode.get(0).charAt(dexCode.get(0).lastIndexOf("-")+1)+"").toUpperCase();
             String secondDataType = (dexCode.get(0).charAt(0)+"").toUpperCase();
             if(firstDataType.equals("L")){
                 firstDataType = "J";
@@ -90,6 +90,13 @@ public class _neg_not_to extends Instruction {
             }
             Register firstRegister = globalArguments.registerQueue.getByDexName(dexCode.get(1));
             Register secondRegister = globalArguments.registerQueue.getByDexName(dexCode.get(2));
+            
+            ArrayList<String> lastIns = globalArguments.rf.getInstruction(lineNum-1);
+            if(lastIns.get(0).contains("const") && lastIns.get(1).equals(secondRegister.dexName)){
+            	secondRegister.updateType(lineNum-1, secondDataType);
+            }
+            
+            
             firstRegister.updateType(lineNum, secondDataType);
             secondRegister.updateType(lineNum, firstDataType);
         }
@@ -99,6 +106,12 @@ public class _neg_not_to extends Instruction {
                 dataType = "J";
             }
             Register register = globalArguments.registerQueue.getByDexName(dexCode.get(1));
+            
+            ArrayList<String> lastIns = globalArguments.rf.getInstruction(lineNum-1);
+            if(lastIns.get(0).contains("const") && lastIns.get(1).equals(register.dexName)){
+            	register.updateType(lineNum-1, dataType);
+            }
+            
             register.updateType(lineNum, dataType);
         }
         return true;

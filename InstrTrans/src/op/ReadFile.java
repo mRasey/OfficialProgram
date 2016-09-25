@@ -30,7 +30,7 @@ public class ReadFile {
 	String regex4 = "[p,v]\\d+[}]\\,";
 	
 	
-	public ReadFile(String f){
+	public void RFile(String f){
 		file = new File(f);
 		try {
 			fis = new FileInputStream(file);

@@ -6,8 +6,8 @@ import op.globalArguments;
 
 public class SingleLine {
 
-    ArrayList<String> byteCodes = new ArrayList<>();
-    int lineNumber;
+    public ArrayList<String> byteCodes = new ArrayList<>();
+    public int lineNumber;
     
     public SingleLine(int n) {
     	lineNumber = n;
@@ -17,6 +17,7 @@ public class SingleLine {
         byteCodes.add(byteCode);
     }
 
+    
     public SingleLine print() {
         for(String code : byteCodes) {
         	globalArguments.optimizedByteCode.add(code);

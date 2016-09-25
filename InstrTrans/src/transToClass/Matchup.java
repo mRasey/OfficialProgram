@@ -99,9 +99,27 @@ public class Matchup {
                 else if (instrSize == 1)
                     result += instrToHex.get(instrName);
                 else {
-                    if(code.contains("#"))
-                        result = result + instrToHex.get(instrName)
-                                + getHexN(Integer.parseInt(code.split(" ")[2].substring(1)), (instrSize - 1) * 2);
+                    if(code.contains("#")){
+                    	String ins = code.split(" ")[1];
+                    	//System.out.println(ins);
+                    	//对于ldc指令，索引大于255要改成ldc_w指令
+                    	if(ins.equals("ldc")){
+                        	int index = Integer.parseInt(code.substring(code.indexOf("#")+1));
+                        	if(index > 255){
+                        		 result = result + "13"
+                                 + getHexN(Integer.parseInt(code.split(" ")[2].substring(1)), 4);
+                        	}
+                        	else{
+                        		 result = result + instrToHex.get(instrName)
+                                 + getHexN(Integer.parseInt(code.split(" ")[2].substring(1)), (instrSize - 1) * 2);
+                        	}
+                    	}
+                    	else{
+                    		result = result + instrToHex.get(instrName)
+                                     + getHexN(Integer.parseInt(code.split(" ")[2].substring(1)), (instrSize - 1) * 2);
+                    	}
+                    }
+                    	
                     else{
                     	String ins = code.split(" ")[1];
                     	String temp = code.split(" ")[2];

@@ -42,7 +42,9 @@ public class cp_info {
 						i++;
 					}
 					u2 num = new u2((short) temp);
+					
 					info+=num.toString();
+					temp = 0;
 				}
 			}
 		}

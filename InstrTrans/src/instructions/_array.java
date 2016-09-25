@@ -204,13 +204,15 @@ public class _array extends Instruction{
                 break;
             case "new-array" :
             case "new-array/jumbo" :
-                firstRegister.updateType(lineNum, dexCode.get(3));
-                secondRegister.updateType(lineNum, "I");
-                //为上一个const寄存器赋类型
+            	//为上一个const寄存器赋类型
+            	//会不会在前一条之外给第三个寄存器赋值，上一条给第二个寄存器赋值？？？
                 lastIns = globalArguments.rf.getInstruction(lineNum-1);
                 if(lastIns.get(0).contains("const") && lastIns.get(1).equals(secondRegister.dexName)){
                 	secondRegister.updateType(lineNum-1, "I");
                 }
+                firstRegister.updateType(lineNum, dexCode.get(3));
+                secondRegister.updateType(lineNum, "I");
+                
                 break;
             case "filled-new-array" :
             case "filled-new-array/range" :
@@ -220,11 +222,7 @@ public class _array extends Instruction{
                 String dataType = arrayType.substring(arrayType.indexOf("[") + 1);
 
                 int j = 1;
-                while(j<dexCode.size()){
-                    register = globalArguments.registerQueue.getByDexName(dexCode.get(j));
-                    register.updateType(lineNum, dataType);
-                }
-                //为上面若干const寄存器赋类型
+              //为上面若干const寄存器赋类型
                 String[] regName = new String[dexCode.size()-2];
                 for(j=0;j<regName.length;j++){
                 	regName[j] = dexCode.get(j+1);
@@ -245,9 +243,12 @@ public class _array extends Instruction{
                 	}
                 	order--;
                 }while(order >= 0 && mark >=0);
-                
-                
-                
+                //为当前寄存器赋类型
+                j = 1;
+                while(j<dexCode.size()){
+                    register = globalArguments.registerQueue.getByDexName(dexCode.get(j));
+                    register.updateType(lineNum, dataType);
+                }
                 break;
 
             case "fill-array-data" :
@@ -261,15 +262,17 @@ public class _array extends Instruction{
             case "aget-byte" :
             case "aget-char" :
             case "aget-short" :
-            	firstRegister.updateType(lineNum, secondRegister.currentType.substring(secondRegister.currentType.indexOf("[") + 1));
-                secondRegister.updateType(lineNum, secondRegister.currentType);
-                thirdRegister.updateType(lineNum, "I");
-                lastIns = globalArguments.rf.getInstruction(lineNum-1);
+            	lastIns = globalArguments.rf.getInstruction(lineNum-1);
                 if(lastIns.get(0).contains("const")){
                 	if(lastIns.get(1).equals(thirdRegister.dexName)){
                 		thirdRegister.updateType(lineNum-1, "I");
                 	}
                 }
+            	
+            	firstRegister.updateType(lineNum, secondRegister.currentType.substring(secondRegister.currentType.indexOf("[") + 1));
+                secondRegister.updateType(lineNum, secondRegister.currentType);
+                thirdRegister.updateType(lineNum, "I");
+                
                 break;
             case "aput" :
             case "aput-wide" :
@@ -278,11 +281,8 @@ public class _array extends Instruction{
             case "aput-byte" :
             case "aput-char" :
             case "aput-short" :
-                firstRegister.updateType(lineNum, secondRegister.currentType.substring(secondRegister.currentType.indexOf("[") + 1));
-                secondRegister.updateType(lineNum, secondRegister.currentType);
-                thirdRegister.updateType(lineNum, "I");
-                //System.out.println(firstRegister.dexName+" "+secondRegister.dexName+" "+thirdRegister.dexName);
-                for(int i=1;i<=2;i++){
+            	
+            	for(int i=1;;i++){
                 	lastIns = globalArguments.rf.getInstruction(lineNum-i);
                     if(lastIns.get(0).contains("const")){
                     	if(lastIns.get(1).equals(thirdRegister.dexName)){
@@ -296,10 +296,22 @@ public class _array extends Instruction{
                     		break;
                     	}
                     }
+                    else if(lastIns.get(0).startsWith(":")){
+                    	continue;
+                    }
+                    else if(lastIns.get(0).startsWith(".")){
+                    	continue;
+                    }
                     else{
                     	break;
                     }
                 }
+            	
+                firstRegister.updateType(lineNum, secondRegister.currentType.substring(secondRegister.currentType.indexOf("[") + 1));
+                secondRegister.updateType(lineNum, secondRegister.currentType);
+                thirdRegister.updateType(lineNum, "I");
+                //System.out.println(firstRegister.dexName+" "+secondRegister.dexName+" "+thirdRegister.dexName);
+                
                 
                 break;
 

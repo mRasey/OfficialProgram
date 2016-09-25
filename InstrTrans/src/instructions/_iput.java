@@ -52,14 +52,17 @@ public class _iput extends Instruction {
     public boolean ifUpgrade(ArrayList<String> dexCode, int lineNum) {
         Register firstRegister = globalArguments.registerQueue.getByDexName(dexCode.get(1));
         Register secondRegister = globalArguments.registerQueue.getByDexName(dexCode.get(2));
-        firstRegister.updateType(lineNum, dexCode.get(3).substring(dexCode.get(3).lastIndexOf(":")+1));
-        secondRegister.updateType(lineNum, secondRegister.currentType);
         
       //为上一行const赋值
         ArrayList<String> lastIns = globalArguments.rf.getInstruction(lineNum-1);
         if(lastIns.get(0).contains("const") && lastIns.get(1).equals(firstRegister.dexName)){
         	firstRegister.updateType(lineNum-1, dexCode.get(3).substring(dexCode.get(3).lastIndexOf(":")+1));
         }
+        //为当前寄存器赋类型
+        firstRegister.updateType(lineNum, dexCode.get(3).substring(dexCode.get(3).lastIndexOf(":")+1));
+        secondRegister.updateType(lineNum, secondRegister.currentType);
+        
+      
         
         return true;
     }
