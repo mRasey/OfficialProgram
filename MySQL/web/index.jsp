@@ -42,15 +42,19 @@
               }).done(function (data) {
 //                  alert("done");
                   var ifFind = eval(data).ifFind;
-                  if(ifFind=="true") {
-
+                  if(ifFind == "true") {
+                      alert("欢迎登陆");
                   }
-                  else {
+                  else if(ifFind == "false"){
+                      alert("未注册，请注册后登陆");
                       $("#login_form").removeClass('shake_effect');
-                      setTimeout(function()
-                      {
+                      setTimeout(function() {
                           $("#login_form").addClass('shake_effect')
                       },1);
+                  }
+                  else {
+                      alert("发生错误");
+                      self.location = "index.jsp";
                   }
               }).fail(function () {
                   alert("fail");
@@ -72,7 +76,7 @@
               }
               else {
                   $.ajax({
-                      type: "GET",
+                      type: "POST",
                       dataType: "json",
                       data: {
                           "name": name,
@@ -80,17 +84,20 @@
                           "email": email,
                           "job": job
                       },
-                      url: "CheckRegister"
+                      url: "CheckLogin"
                   }).done(function (data) {
                       var contain = eval(data).contain;
                       if (contain == "true") {
                           alert("用户已存在，请登录");
                           self.location = "index.jsp";
                       }
+                      else if(contain == "error") {
+                          alert("发生错误");
+                          self.location = "index.jsp"
+                      }
                       else {
                           alert("注册成功！");
-                          $("#user_name").val("");
-                          $("#password").val("");
+                          self.location = "index.jsp"
                       }
                   }).fail(function () {
                       alert("fail");
@@ -128,7 +135,7 @@
                       <input type="text" placeholder="用户名" id="r_user_name"/>
                       <input type="password" placeholder="密码" id="r_password" />
                       <input type="password" placeholder="确认密码" id="r_confirm_password" />
-                      <input type="text" placeholder="电子邮件" id="r_emial"/>
+                      <input type="text" placeholder="电子邮件" id="r_email"/>
                       <section>
                           <select id="job" class="cs-select cs-skin-border">
                               <option value="" disabled selected>请选择职业...</option>

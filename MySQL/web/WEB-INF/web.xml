@@ -13,15 +13,4 @@
         <servlet-name>checkLogin</servlet-name>
         <url-pattern>/CheckLogin</url-pattern>
     </servlet-mapping>
-
-    <servlet>
-        <description/>
-        <display-name>CheckRegister</display-name>
-        <servlet-name>checkRegister</servlet-name>
-        <servlet-class>com.billy.servlets.CheckRegister</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>checkRegister</servlet-name>
-        <url-pattern>/CheckRegister</url-pattern>
-    </servlet-mapping>
 </web-app>
