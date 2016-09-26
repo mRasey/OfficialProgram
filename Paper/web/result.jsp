@@ -17,6 +17,10 @@
     <%
         String fileName = request.getParameter("fileName");
         String dirPath = request.getParameter("dirPath");
+        if(!new File(dirPath + fileName + "/result.docx").exists()
+                || !new File(dirPath + fileName + "/resultWithComments.docx").exists())
+            response.sendRedirect("showErrorInfo.jsp");
+
 //        String txtPath = dirPath + fileName + "/" + "check_out.txt";
 //        String wordPath = dirPath + fileName + "/" + "result.docx";
     %>

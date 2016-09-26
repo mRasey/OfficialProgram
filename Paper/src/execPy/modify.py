@@ -137,9 +137,9 @@ def modify(xml_tree,errorlist):
                             nextT = True
                     if errorlist[listCount]['type'] == 'fontCN':
                         if locate == 'abstr5':
-                            modify_rpr(r,'rFonts','eastAsia','黑体'.decode())
+                            modify_rpr(r,'rFonts','eastAsia','黑体'.decode(Unicode_bt))
                         elif locate == 'abstr6':
-                            modify_rpr(r,'rFonts','eastAsia','宋体'.decode())
+                            modify_rpr(r,'rFonts','eastAsia','宋体'.decode(Unicode_bt))
                     elif errorlist[listCount]['type'] == 'fontEN':
                         modify_rpr(r,'rFonts','ascii','Times New Roman')
                     elif errorlist[listCount]['type'] == 'fontSize':
@@ -504,7 +504,6 @@ with open(os.path.join(tmp_dir,'word/document.xml'),'w') as f:
 filenames = zipF.namelist()
 # Now, create the new zip file and add all the filex into the archive
 zip_copy_filename = Data_DirPath + 'result.docx'
-
 with zipfile.ZipFile(zip_copy_filename, "w") as docx:
     for filename in filenames:
         docx.write(os.path.join(tmp_dir,filename),  filename)

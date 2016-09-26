@@ -38,12 +38,19 @@
     <script>
         function checkFileType() {
             var fileName = document.getElementById("file").value;
+            var preFix = fileName.substring(fileName.lastIndexOf("\\") + 1, fileName.length - 5);
             var postfix = fileName.substring(fileName.length - 5, fileName.length);
+            for(var i = 0; i < preFix.length; i++) {
+                if(preFix.charAt(i) < '0' || preFix.charAt(i) > '9') {
+                    alert("不合法的文件名，请重试");
+                    return false;
+                }
+            }
             if(postfix == ".docx") {
                 return true;
             }
             else {
-                alert("请输入有效的.docx文件" + fileName);
+                alert("请输入有效的.docx文件");
                 return false;
             }
         }
