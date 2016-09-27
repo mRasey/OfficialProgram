@@ -33,15 +33,16 @@ public class Scan extends HttpServlet{
         System.err.println(fileName);
         System.out.println(dirPath);
         try {
-            JSONObject jsonObject = new JSONObject();
+//            JSONObject jsonObject = new JSONObject();
             //req.getRequestDispatcher(req.getSession().getServletContext().getRealPath("/") + "result.jsp").forward(req,resp);
             File dir = new File(dirPath + fileName);
             if (dir.listFiles() != null) {
                 for (File file : dir.listFiles()) {
                     if (file.getName().equals("resultWithComments.docx")) {
-                        System.err.println(req.getSession().getServletContext().getRealPath("/") + "/result.jsp");
-                        jsonObject.put("ifFind", "true");
-                        resp.getWriter().print(jsonObject);
+//                        System.err.println(req.getSession().getServletContext().getRealPath("/") + "/result.jsp");
+//                        jsonObject.put("ifFind", "true");
+                        resp.getWriter().print("true");
+                        resp.getWriter().close();
 //                            req.getRequestDispatcher(req.getSession().getServletContext().getRealPath("/") + "result.jsp").forward(req,resp);
 //                            resp.sendRedirect(req.getSession().getServletContext().getRealPath("/") + "result.jsp?fileName=" + fileName);
                         System.err.println("end");
@@ -49,8 +50,9 @@ public class Scan extends HttpServlet{
                     }
                 }
             }
-            jsonObject.put("ifFind", "false");
-            resp.getWriter().print(jsonObject);
+//            jsonObject.put("ifFind", "false");
+            resp.getWriter().print("false");
+            resp.getWriter().close();
         }catch (Exception e) {
             e.printStackTrace();
 //            try {
@@ -60,32 +62,4 @@ public class Scan extends HttpServlet{
 //            }
         }
     }
-
-//    @Override
-//    public void run() {
-//        try {
-//            String fileName = request.getParameter("fileName");
-//            loop:
-//            while (true) {
-//                File dir = new File("C:/Users/Billy/Documents/GitHub/OfficialProgram/Paper/data/" + fileName);
-//                if (dir.listFiles() != null)
-//                    for (File file : dir.listFiles()) {
-//                        if (file.getName().equals("resultWithComments.docx")) {
-//                            response.sendRedirect("result.jsp?fileName=" + fileName);
-//                            RequestDispatcher d = request.getRequestDispatcher("result.jsp");
-//                            d.forward(request,response);
-//                            break loop;
-//                        }
-//                    }
-//                Thread.sleep(100);
-//            }
-//        }catch (Exception e) {
-//            e.printStackTrace();
-//            try {
-//                response.sendRedirect("showErrorInfo.jsp");
-//            } catch (IOException e1) {
-//                e1.printStackTrace();
-//            }
-//        }
-//    }
 }

@@ -41,8 +41,9 @@
                 dataType: "json",
                 url: "Scan?dirPath=" + "<%=dirPath%>" + "&fileName=" + "<%=fileName%>"
             }).done(function (data) {
-                var ifFind = eval(data).ifFind;
-                if (ifFind == "true") {
+                var ifFind = eval(data);
+                if (data.toString() == "true") {
+//                    alert(data);
                     self.location = 'result.jsp?dirPath=' + "<%=dirPath%>" + "&fileName=" + "<%=fileName%>";
                     clearInterval(execute);
                 }
