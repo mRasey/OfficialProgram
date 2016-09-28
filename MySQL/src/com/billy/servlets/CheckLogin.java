@@ -1,7 +1,5 @@
 package com.billy.servlets;
 
-import net.sf.json.JSONObject;
-
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -65,15 +63,14 @@ public class CheckLogin extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 //        JSONObject jsonObject = new JSONObject();
-        System.err.println("in checkLogin");
+        System.err.println("in checkRegister");
         String name = req.getParameter("name");
         String password = req.getParameter("password");
-        String email = req.getParameter("email");
         String job = req.getParameter("job");
-        System.out.println(name + " " + password + " " + email + " " + job);
+        System.out.println(name + " " + password + " " + job);
 
         try {
-            sql = "SELECT name FROM users WHERE name = " + $(name);
+            sql = "SELECT 姓名 FROM 用户 WHERE 姓名 = " + $(name);
             ResultSet resultSet = statement.executeQuery(sql);
             if(resultSet.next()) {
 //                jsonObject.put("contain", "true");
@@ -81,9 +78,8 @@ public class CheckLogin extends HttpServlet {
                 return;
             }
             sql = "INSERT " +
-                    "INTO users " +
-                    "VALUES (" + $(name) + "," + $(password) + "," + $(email) + "," + $(job) + ");";
-//                    "VALUES (" + "'wz'," + "'123'," + "'123@123'," + "'email');";
+                    "INTO 用户 " +
+                    "VALUES (" + $(name) + "," + $(password) + "," + $(job) + ");";
             System.err.println(sql);
             statement.executeUpdate(sql);
 //            jsonObject.put("contain", "false");

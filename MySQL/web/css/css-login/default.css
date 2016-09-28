@@ -1,3 +1,4 @@
+@import url(http://fonts.useso.com/css?family=Raleway:200,500,700,800);
 @font-face {
 	font-family: 'icomoon';
 	src:url('../fonts/icomoon.eot?rretjt');
@@ -23,16 +24,8 @@
 	-moz-osx-font-smoothing: grayscale;
 }
 
-body, html { font-size: 100%; 	padding: 0; margin: 0;}
+body, html { padding: 0; margin: 0;}
 
-/* Reset */
-*,
-*:after,
-*:before {
-	-webkit-box-sizing: border-box;
-	-moz-box-sizing: border-box;
-	box-sizing: border-box;
-}
 
 /* Clearfix hack by Nicolas Gallagher: http://nicolasgallagher.com/micro-clearfix-hack/ */
 .clearfix:before,
@@ -46,16 +39,14 @@ body, html { font-size: 100%; 	padding: 0; margin: 0;}
 }
 
 body{
-	background: #494A5F;
-	color: #D5D6E2;
-	font-weight: 500;
-	font-size: 1.05em;
-	font-family: "Microsoft YaHei","宋体","Segoe UI", "Lucida Grande", Helvetica, Arial,sans-serif, FreeSans, Arimo;
+	font-family: "Segoe UI", "Lucida Grande", Helvetica, Arial, "Microsoft YaHei", FreeSans, Arimo, "Droid Sans", "wenquanyi micro hei", "Hiragino Sans GB", "Hiragino Sans GB W3", "FontAwesome", sans-serif;
 }
-a{color: #2fa0ec;outline: none;text-decoration: none;}
-a:hover,a:focus{color:#74777b;text-decoration: none;}
-.htmleaf-container{
-	margin: 0 auto;
+a{color: #2fa0ec;text-decoration: none;outline: none;}
+a:hover,a:focus{color:#74777b;}
+
+.htmleaf-content {
+	font-size: 150%;
+	padding: 1em 0;
 }
 
 .bgcolor-1 { background: #f0efee; }
@@ -70,24 +61,22 @@ a:hover,a:focus{color:#74777b;text-decoration: none;}
 .bgcolor-10{ background: #64448f; color: #fff;}/*Violet*/
 .bgcolor-11{ background: #3755ad; color: #fff;}/*dark blue*/
 .bgcolor-12{ background: #3498DB; color: #fff;}/*light blue*/
-.bgcolor-20{ background: #494A5F;color: #D5D6E2;}
 /* Header */
 .htmleaf-header{
 	padding: 1em 190px 1em;
 	letter-spacing: -1px;
 	text-align: center;
-	background: #66677c;
 }
 .htmleaf-header h1 {
-	color: #D5D6E2;
+	color: #fff;
 	font-weight: 600;
 	font-size: 2em;
 	line-height: 1;
 	margin-bottom: 0;
-	font-family: "Microsoft YaHei","宋体","Segoe UI", "Lucida Grande", Helvetica, Arial,sans-serif, FreeSans, Arimo;
+	font-family: "Segoe UI", "Lucida Grande", Helvetica, Arial, "Microsoft YaHei", FreeSans, Arimo, "Droid Sans", "wenquanyi micro hei", "Hiragino Sans GB", "Hiragino Sans GB W3", "FontAwesome", sans-serif;
 }
 .htmleaf-header h1 span {
-	font-family: "Microsoft YaHei","宋体","Segoe UI", "Lucida Grande", Helvetica, Arial,sans-serif, FreeSans, Arimo;
+	font-family: "Segoe UI", "Lucida Grande", Helvetica, Arial, "Microsoft YaHei", FreeSans, Arimo, "Droid Sans", "wenquanyi micro hei", "Hiragino Sans GB", "Hiragino Sans GB W3", "FontAwesome", sans-serif;
 	display: block;
 	font-size: 60%;
 	font-weight: 400;
@@ -95,9 +84,9 @@ a:hover,a:focus{color:#74777b;text-decoration: none;}
 	color: #c3c8cd;
 }
 /*nav*/
-.htmleaf-demo a{color: #fff;text-decoration: none;}
+.htmleaf-demo a{color: #1d7db1;text-decoration: none;}
 .htmleaf-demo{width: 100%;padding-bottom: 1.2em;}
-.htmleaf-demo a{display: inline-block;margin: 0.5em;padding: 0.6em 1em;border: 3px solid #fff;font-weight: 700;}
+.htmleaf-demo a{display: inline-block;margin: 0.5em;padding: 0.6em 1em;border: 3px solid #1d7db1;font-weight: 700;}
 .htmleaf-demo a:hover{opacity: 0.6;}
 .htmleaf-demo a.current{background:#1d7db1;color: #fff; }
 /* Top Navigation Style */
@@ -151,8 +140,12 @@ a:hover,a:focus{color:#74777b;text-decoration: none;}
 .center{text-align: center;}
 /****/
 .related {
+	position: absolute;
+	top: 100%;
+	left: 0;
+	width: 100%;
 	color: #fff;
-	background: transparent;
+	background: #333;
 	text-align: center;
 	font-size: 1.25em;
 	padding: 0.5em 0;
@@ -167,7 +160,7 @@ a:hover,a:focus{color:#74777b;text-decoration: none;}
 	text-align: center;
 	margin: 20px 10px;
 	padding: 25px;
-	font-family: "Microsoft YaHei","宋体","Segoe UI", "Lucida Grande", Helvetica, Arial,sans-serif, FreeSans, Arimo;
+	font-family: "Segoe UI", "Lucida Grande", Helvetica, Arial, "Microsoft YaHei", FreeSans, Arimo, "Droid Sans", "wenquanyi micro hei", "Hiragino Sans GB", "Hiragino Sans GB W3", "FontAwesome", sans-serif;
 }
 .related a {
 	display: inline-block;
@@ -187,11 +180,8 @@ a:hover,a:focus{color:#74777b;text-decoration: none;}
 
 .related a img {
 	max-width: 100%;
-	opacity: 0.4;
+	opacity: 0.8;
 	border-radius: 4px;
-	-webkit-transition: opacity 0.5s;
-	-o-transition: opacity 0.5s;
-	transition: opacity 0.5s;
 }
 .related a:hover img,
 .related a:active img {
@@ -212,47 +202,24 @@ a:hover,a:focus{color:#74777b;text-decoration: none;}
 	content: "\e5001";
 }
 
-@media screen and (max-width: 1024px) {
+@media screen and (max-width: 50em) {
 	.htmleaf-header {
-		padding: 2em 10% 2em;
+		padding: 3em 10% 4em;
 	}
 	.htmleaf-header h1 {
-        font-size:1.4em;
+        font-size:2em;
     }
-    .htmleaf-links{font-size: 1.4em}
 }
 
-@media screen and (max-width: 960px) {
-	.htmleaf-header {
-		padding: 2em 10% 2em;
-	}
+
+@media screen and (max-width: 40em) {
 	.htmleaf-header h1 {
+		font-size: 1.5em;
+	}
+}
+
+@media screen and (max-width: 30em) {
+    .htmleaf-header h1 {
         font-size:1.2em;
     }
-    .htmleaf-links{font-size: 1.2em}
-    .related h3{font-size: 1em;}
-	.related a h3 {
-		font-size: 0.8em;
-	}
-}
-
-@media screen and (max-width: 766px) {
-	.htmleaf-header h1 {
-        font-size:1.3em;
-    }
-    .htmleaf-links{font-size: 1.3em}
-}
-
-@media screen and (max-width: 640px) {
-	.htmleaf-header {
-		padding: 2em 10% 2em;
-	}
-	.htmleaf-header h1 {
-        font-size:1em;
-    }
-    .htmleaf-links{font-size: 1em}
-    .related h3{font-size: 0.8em;}
-	.related a h3 {
-		font-size: 0.6em;
-	}
 }

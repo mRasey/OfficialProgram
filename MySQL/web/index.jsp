@@ -14,7 +14,6 @@
       <link rel="stylesheet" type="text/css" href="css/css-login/normalize.css" >
       <link rel="stylesheet" type="text/css" href="css/css-select/cs-select.css" >
       <link rel="stylesheet" type="text/css" href="css/css-select/cs-skin-border.css" >
-      <link rel="stylesheet" href="dist/dist-bg/styles/Vidage.css" />
 
       <script type="text/javascript" src="js/jquery-3.1.0.js"></script>
       <script type="text/javascript" src="js/select/classie.js"></script>
@@ -73,10 +72,10 @@
               var name = $("#r_user_name").val();
               var pass = $("#r_password").val();
               var confirm_pass = $("#r_confirm_password").val();
-              var email = $("#r_email").val();
               var job = document.getElementById("job").value;
 
-              if(name == "" || pass == "" || confirm_pass == "" || email == "" || job == "") {
+              if(name == "" || pass == "" || confirm_pass == "" || job == ""
+                || pass != confirm_pass) {
                   $("#login_form").removeClass('shake_effect');
                   setTimeout(function() {
                       $("#login_form").addClass('shake_effect')
@@ -89,7 +88,6 @@
                       data: {
                           "name": name,
                           "password": pass,
-                          "email": email,
                           "job": job
                       },
                       url: "CheckLogin"
@@ -105,7 +103,7 @@
                       }
                       else {
                           alert("注册成功！");
-                          self.location = "index.jsp"
+                          self.location = "register.jsp?job=" + job;
                       }
                   }).fail(function () {
                       alert("fail");
@@ -124,10 +122,11 @@
                   return false;
               });
               $('.message a').click(function () {
-                  $('form').animate({
-                      height: 'toggle',
-                      opacity: 'toggle'
-                  }, 'slow');
+                  self.location = "register.jsp";
+//                  $('form').animate({
+//                      height: 'toggle',
+//                      opacity: 'toggle'
+//                  }, 'slow');
               });
           })
       </script>
@@ -143,17 +142,14 @@
                       <input type="text" placeholder="用户名" id="r_user_name"/>
                       <input type="password" placeholder="密码" id="r_password" />
                       <input type="password" placeholder="确认密码" id="r_confirm_password" />
-                      <input type="text" placeholder="电子邮件" id="r_email"/>
                       <section>
                           <select id="job" class="cs-select cs-skin-border">
-                              <option value="" disabled selected>请选择职业...</option>
-                              <option value="seller">卖家</option>
-                              <option value="buyer">买家</option>
-                              <option value="maker">厂家</option>
-                              <option value="admin">平台管理员</option>
-                              <option value="Storekeeper">仓库管理员</option>
-                              <option value="logistics">物流公司</option>
-                              <option value="courier">快递员</option>
+                              <option value="" disabled selected>请选择职业类别</option>
+                              <option value="management">管理层</option>
+                              <option value="studioMajordomo">工作室总监</option>
+                              <option value="workingGroupPrincipal">项目组负责人</option>
+                              <option value="workingGroupMember">项目组组员</option>
+                              <option value="operationalDepartmentMember">运营部成员</option>
                           </select>
                       </section>
                       <br>
@@ -170,24 +166,5 @@
               </div>
           </div>
       </div>
-
-      <%--背景动画部分--%>
-      <%--<div class="Vidage">--%>
-          <%--<div class="Vidage__image"></div>--%>
-
-          <%--<video id="VidageVideo" class="Vidage__video" preload="metadata" loop autoplay muted>--%>
-              <%--<source src="videos/bg.webm" type="video/webm">--%>
-              <%--<source src="videos/bg.mp4" type="video/mp4">--%>
-          <%--</video>--%>
-
-          <%--<div class="Vidage__backdrop"></div>--%>
-      <%--</div>--%>
-
-
-      <%--<!-- Vidage init -->--%>
-      <%--<script src="dist/dist-bg/scripts/Vidage.min.js"></script>--%>
-      <%--<script>--%>
-          <%--new Vidage('#VidageVideo');--%>
-      <%--</script>--%>
   </body>
 </html>
