@@ -41,7 +41,7 @@
                   url: "CheckLogin"
               }).done(function (data) {
 //                  alert("done");
-                  var ifFind = eval(data).ifFind;
+                  var ifFind = data.toString();
                   if(ifFind == "true") {
                       alert("欢迎登陆");
                   }
@@ -86,7 +86,7 @@
                       },
                       url: "CheckLogin"
                   }).done(function (data) {
-                      var contain = eval(data).contain;
+                      var contain = data.toString();
                       if (contain == "true") {
                           alert("用户已存在，请登录");
                           self.location = "index.jsp";

@@ -37,7 +37,7 @@ public class CheckLogin extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        JSONObject jsonObject = new JSONObject();
+//        JSONObject jsonObject = new JSONObject();
         System.err.println("in checkLogin");
         String name = req.getParameter("name");
         String password = req.getParameter("password");
@@ -47,24 +47,24 @@ public class CheckLogin extends HttpServlet {
             ResultSet resultSet = statement.executeQuery(sql);
             if(resultSet.next()) {
                 if(resultSet.getString("password").equals(password)) {
-                    jsonObject.put("ifFind", "true");
-                    resp.getWriter().print(jsonObject);
+//                    jsonObject.put("ifFind", "true");
+                    resp.getWriter().print("true");
                     return;
                 }
             }
-            jsonObject.put("ifFind", "false");
-            resp.getWriter().print(jsonObject);
+//            jsonObject.put("ifFind", "false");
+            resp.getWriter().print("false");
         } catch (SQLException e) {
             e.printStackTrace();
             System.out.println("操作数据库出错");
-            jsonObject.put("ifFind", "error");
-            resp.getWriter().print(jsonObject);
+//            jsonObject.put("ifFind", "error");
+            resp.getWriter().print("error");
         }
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        JSONObject jsonObject = new JSONObject();
+//        JSONObject jsonObject = new JSONObject();
         System.err.println("in checkLogin");
         String name = req.getParameter("name");
         String password = req.getParameter("password");
@@ -76,8 +76,8 @@ public class CheckLogin extends HttpServlet {
             sql = "SELECT name FROM users WHERE name = " + $(name);
             ResultSet resultSet = statement.executeQuery(sql);
             if(resultSet.next()) {
-                jsonObject.put("contain", "true");
-                resp.getWriter().print(jsonObject);
+//                jsonObject.put("contain", "true");
+                resp.getWriter().print("true");
                 return;
             }
             sql = "INSERT " +
@@ -86,13 +86,13 @@ public class CheckLogin extends HttpServlet {
 //                    "VALUES (" + "'wz'," + "'123'," + "'123@123'," + "'email');";
             System.err.println(sql);
             statement.executeUpdate(sql);
-            jsonObject.put("contain", "false");
-            resp.getWriter().print(jsonObject);
+//            jsonObject.put("contain", "false");
+            resp.getWriter().print("false");
         } catch (SQLException e) {
             e.printStackTrace();
             System.out.println("操作数据库出错");
-            jsonObject.put("contain", "error");
-            resp.getWriter().print(jsonObject);
+//            jsonObject.put("contain", "error");
+            resp.getWriter().print("error");
         }
 
     }

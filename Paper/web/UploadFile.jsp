@@ -63,19 +63,19 @@
                         // 写入文件
                         String name;//上传文件的短名称
                         if (fileName.lastIndexOf("\\") >= 0) {
-                            name = fileName.substring(fileName.lastIndexOf("\\"));
+                            name = fileName.substring(fileName.lastIndexOf("\\") + 1);
                             File dir = new File(filePath + name);
                             if(dir.exists())
                                 ExtractXML.deleteAllDir(filePath, name);
                             new File(filePath + name).mkdirs();
-                            file = new File(filePath + name + "\\", "origin.docx");//上传文件命名为origin
+                            file = new File(filePath + name + "/", "origin.docx");//上传文件命名为origin
                         } else {
                             name = fileName.substring(fileName.lastIndexOf("\\") + 1);
                             File dir = new File(filePath + name);
                             if(dir.exists())
                                 ExtractXML.deleteAllDir(filePath, name);
                             new File(filePath + name).mkdirs();
-                            file = new File(filePath + name + "\\", "origin.docx");//上传文件命名为origin
+                            file = new File(filePath + name + "/", "origin.docx");//上传文件命名为origin
                         }
                         fi.write(file);
 //                    new File(filePath + name + "\\", "check_out.txt").createNewFile();
