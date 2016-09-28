@@ -31,35 +31,43 @@
               var name=$("#user_name").val();
               var pass=$("#password").val();
 
-              $.ajax({
-                  type: "GET",
-                  dataType: "json",
-                  data: {
-                      "name": name,
-                      "password": pass
-                  },
-                  url: "CheckLogin"
-              }).done(function (data) {
+              if(name == "" || pass == "") {
+                  $("#login_form").removeClass('shake_effect');
+                  setTimeout(function() {
+                      $("#login_form").addClass('shake_effect')
+                  },1);
+              }
+              else {
+                  $.ajax({
+                      type: "GET",
+                      dataType: "json",
+                      data: {
+                          "name": name,
+                          "password": pass
+                      },
+                      url: "CheckLogin"
+                  }).done(function (data) {
 //                  alert("done");
-                  var ifFind = data.toString();
-                  if(ifFind == "true") {
-                      alert("欢迎登陆");
-                  }
-                  else if(ifFind == "false"){
-                      alert("未注册，请注册后登陆");
-                      $("#login_form").removeClass('shake_effect');
-                      setTimeout(function() {
-                          $("#login_form").addClass('shake_effect')
-                      },1);
-                  }
-                  else {
-                      alert("发生错误");
+                      var ifFind = data.toString();
+                      if (ifFind == "true") {
+                          alert("欢迎登陆");
+                      }
+                      else if (ifFind == "false") {
+                          alert("未注册，请注册后登陆");
+                          $("#login_form").removeClass('shake_effect');
+                          setTimeout(function () {
+                              $("#login_form").addClass('shake_effect')
+                          }, 1);
+                      }
+                      else {
+                          alert("发生错误");
+                          self.location = "index.jsp";
+                      }
+                  }).fail(function () {
+                      alert("fail");
                       self.location = "index.jsp";
-                  }
-              }).fail(function () {
-                  alert("fail");
-                  self.location = "index.jsp";
-              });
+                  });
+              }
           }
           function check_register(){
               var name = $("#r_user_name").val();
@@ -139,9 +147,13 @@
                       <section>
                           <select id="job" class="cs-select cs-skin-border">
                               <option value="" disabled selected>请选择职业...</option>
-                              <option value="email">E-Mail</option>
-                              <option value="twitter">Twitter</option>
-                              <option value="linkedin">LinkedIn</option>
+                              <option value="seller">卖家</option>
+                              <option value="buyer">买家</option>
+                              <option value="maker">厂家</option>
+                              <option value="admin">平台管理员</option>
+                              <option value="Storekeeper">仓库管理员</option>
+                              <option value="logistics">物流公司</option>
+                              <option value="courier">快递员</option>
                           </select>
                       </section>
                       <br>
@@ -159,22 +171,23 @@
           </div>
       </div>
 
-      <div class="Vidage">
-          <div class="Vidage__image"></div>
+      <%--背景动画部分--%>
+      <%--<div class="Vidage">--%>
+          <%--<div class="Vidage__image"></div>--%>
 
-          <video id="VidageVideo" class="Vidage__video" preload="metadata" loop autoplay muted>
-              <source src="videos/bg.webm" type="video/webm">
-              <source src="videos/bg.mp4" type="video/mp4">
-          </video>
+          <%--<video id="VidageVideo" class="Vidage__video" preload="metadata" loop autoplay muted>--%>
+              <%--<source src="videos/bg.webm" type="video/webm">--%>
+              <%--<source src="videos/bg.mp4" type="video/mp4">--%>
+          <%--</video>--%>
 
-          <div class="Vidage__backdrop"></div>
-      </div>
+          <%--<div class="Vidage__backdrop"></div>--%>
+      <%--</div>--%>
 
 
-      <!-- Vidage init -->
-      <script src="dist/dist-bg/scripts/Vidage.min.js"></script>
-      <script>
-          new Vidage('#VidageVideo');
-      </script>
+      <%--<!-- Vidage init -->--%>
+      <%--<script src="dist/dist-bg/scripts/Vidage.min.js"></script>--%>
+      <%--<script>--%>
+          <%--new Vidage('#VidageVideo');--%>
+      <%--</script>--%>
   </body>
 </html>
