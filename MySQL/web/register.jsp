@@ -53,10 +53,10 @@
         <fieldset>
             <h2 class="fs-title">填写个人信息</h2>
             <h3 class="fs-subtitle">个人详细信息是保密的，不会被泄露</h3>
-            <input type="text" name="email" placeholder="邮箱" />
-            <input type="text" name="realName" placeholder="真实姓名" />
-            <input type="text" name="phone" placeholder="电话号码" />
-            <textarea name="address" placeholder="家庭住址"></textarea>
+            <input type="text" name="email" id="email" placeholder="邮箱" />
+            <input type="text" name="realName" id="realName" placeholder="真实姓名" />
+            <input type="text" name="phone" id="phone" placeholder="电话号码" />
+            <textarea name="address" id="address" placeholder="家庭住址"></textarea>
             <input type="button" name="previous" class="previous action-button" value="上一步" />
             <input type="button" name="next" class="next action-button" value="下一步" />
         </fieldset>
@@ -83,6 +83,14 @@
     var left, opacity, scale;
     var animating;
     var index = 0;
+    var name;
+    var password;
+    var repeatPassword;
+    var email;
+    var realName;
+    var phone;
+    var address;
+    var job;
 //    if(index == 1) {
 //        document.getElementById("managementJob").style.display = "";
 //    }
@@ -91,7 +99,7 @@
 
 
         if(index == 2) {
-            var job = document.getElementById("job").value;
+            job = document.getElementById("job").value;
             if(job == "management") {
                 document.getElementById("managementJob").style.display = "";
                 document.getElementById("studioMajordomo").style.display = "none";
@@ -134,19 +142,61 @@
             }
         }
 
-        var name = document.getElementById("userName").value;
-        var password = document.getElementById("password").value;
-        var repeatPassword = document.getElementById("repeatPassword").value;
+        if(index == 1) {
+            name = document.getElementById("userName").value;
+            password = document.getElementById("password").value;
+            repeatPassword = document.getElementById("repeatPassword").value;
+            job = document.getElementById("job").value;
 
-        if(index == 1
-                && (name == "" || password == "" || repeatPassword == ""
-                || job == "" || password != repeatPassword)) {
-            $("#msform").removeClass('shake_effect');
-            setTimeout(function() {
-                $("#msform").addClass('shake_effect')
-            },1);
-            index = index - 1;
-            return false;
+            if(name == "" || password == "" || repeatPassword == ""
+                    || job == "null" || password != repeatPassword) {
+                $("#msform").removeClass('shake_effect');
+                setTimeout(function() {
+                    $("#msform").addClass('shake_effect')
+                },1);
+                index = index - 1;
+                return false;
+            }
+            else {
+                $.ajax({
+                    type: "POST",
+                    dataType: "json",
+                    data: {
+                        "op": "checkIfExist",
+                        "name": name,
+                        "password": password
+                    },
+                    url: "CheckLogin"
+                }).done(function (data) {
+                    var contain = data.toString();
+                    if (contain == "true") {
+                        alert("用户已存在，请登录");
+                        self.location = "index.jsp";
+                    }
+                    else if(contain == "error") {
+                        alert("发生错误");
+                        self.location = "index.jsp"
+                    }
+                }).fail(function () {
+                    alert("fail");
+                    self.location = "index.jsp";
+                });
+            }
+        }
+        if(index == 2) {
+            email = document.getElementById("email").value;
+            realName = document.getElementById("realName").value;
+            phone = document.getElementById("phone").value;
+            address = document.getElementById("address").value;
+
+            if(email == "" || realName == "" || phone == "" || address == "") {
+                $("#msform").removeClass('shake_effect');
+                setTimeout(function () {
+                    $("#msform").addClass('shake_effect')
+                }, 1);
+                index = index - 1;
+                return false;
+            }
         }
 
         if (animating)
@@ -204,6 +254,43 @@
         });
     });
     $('.submit').click(function () {
+        if((job == "management" && document.getElementById("managementJob").value == "")
+        || (job == "studioMajordomo") && document.getElementById("studioMajordomo").value == ""
+        || (job == "workingGroupPrincipal") && document.getElementById("workingGroupPrincipal").value == ""
+        || (job == "workingGroupMember") && (document.getElementById("workingGroupMember1").value == "" || document.getElementById("workingGroupMember2").value == "")
+        || (job == "operationalDepartmentMember") && document.getElementById("operationalDepartmentMember").value == "") {
+            $("#msform").removeClass('shake_effect');
+            setTimeout(function() {
+                $("#msform").addClass('shake_effect')
+            },1);
+            return false;
+        }
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            data: {
+                "op": "submitAll",
+                "name": name,
+                "password": password,
+                "email": email,
+                "realName": realName,
+                "phone": phone,
+                "address": address,
+                "job": job,
+                "management": document.getElementById("managementJob"),
+                "studioMajordomo": document.getElementById("studioMajordomo"),
+                "workingGroupPrincipal": document.getElementById("workingGroupPrincipal"),
+                "workingGroupMember1": document.getElementById("workingGroupMember1"),
+                "workingGroupMember2": document.getElementById("workingGroupMember2"),
+                "operationalDepartmentMember": document.getElementById("operationalDepartmentMember")
+            },
+            url: "CheckLogin"
+        }).done(function (data) {
+            if(data.toString() == "true") {
+                alert("注册成功");
+                self.location = "users/" + job + "/index.jsp";
+            }
+        });
         return false;
     });
 </script>

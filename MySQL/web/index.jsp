@@ -68,55 +68,12 @@
                   });
               }
           }
-          function check_register(){
-              var name = $("#r_user_name").val();
-              var pass = $("#r_password").val();
-              var confirm_pass = $("#r_confirm_password").val();
-              var job = document.getElementById("job").value;
-
-              if(name == "" || pass == "" || confirm_pass == "" || job == ""
-                || pass != confirm_pass) {
-                  $("#login_form").removeClass('shake_effect');
-                  setTimeout(function() {
-                      $("#login_form").addClass('shake_effect')
-                  },1);
-              }
-              else {
-                  $.ajax({
-                      type: "POST",
-                      dataType: "json",
-                      data: {
-                          "name": name,
-                          "password": pass,
-                          "job": job
-                      },
-                      url: "CheckLogin"
-                  }).done(function (data) {
-                      var contain = data.toString();
-                      if (contain == "true") {
-                          alert("用户已存在，请登录");
-                          self.location = "index.jsp";
-                      }
-                      else if(contain == "error") {
-                          alert("发生错误");
-                          self.location = "index.jsp"
-                      }
-                      else {
-                          alert("注册成功！");
-                          self.location = "register.jsp?job=" + job;
-                      }
-                  }).fail(function () {
-                      alert("fail");
-                      self.location = "index.jsp";
-                  });
-              }
-          }
 
           $(function(){
-              $("#create").click(function(){
-                  check_register();
-                  return false;
-              });
+//              $("#create").click(function(){
+//                  check_register();
+//                  return false;
+//              });
               $("#login").click(function(){
                   check_login();
                   return false;
@@ -138,24 +95,24 @@
           </header>
           <div id="wrapper" class="login-page">
               <div id="login_form" class="form">
-                  <form name="form" class="register-form">
-                      <input type="text" placeholder="用户名" id="r_user_name"/>
-                      <input type="password" placeholder="密码" id="r_password" />
-                      <input type="password" placeholder="确认密码" id="r_confirm_password" />
-                      <section>
-                          <select id="job" class="cs-select cs-skin-border">
-                              <option value="" disabled selected>请选择职业类别</option>
-                              <option value="management">管理层</option>
-                              <option value="studioMajordomo">工作室总监</option>
-                              <option value="workingGroupPrincipal">项目组负责人</option>
-                              <option value="workingGroupMember">项目组组员</option>
-                              <option value="operationalDepartmentMember">运营部成员</option>
-                          </select>
-                      </section>
-                      <br>
-                      <button id="create">创建账户</button>
-                      <p class="message">已经有了一个账户? <a href="#">立刻登录</a></p>
-                  </form>
+                  <%--<form name="form" class="register-form">--%>
+                      <%--<input type="text" placeholder="用户名" id="r_user_name"/>--%>
+                      <%--<input type="password" placeholder="密码" id="r_password" />--%>
+                      <%--<input type="password" placeholder="确认密码" id="r_confirm_password" />--%>
+                      <%--<section>--%>
+                          <%--<select id="job" class="cs-select cs-skin-border">--%>
+                              <%--<option value="" disabled selected>请选择职业类别</option>--%>
+                              <%--<option value="management">管理层</option>--%>
+                              <%--<option value="studioMajordomo">工作室总监</option>--%>
+                              <%--<option value="workingGroupPrincipal">项目组负责人</option>--%>
+                              <%--<option value="workingGroupMember">项目组组员</option>--%>
+                              <%--<option value="operationalDepartmentMember">运营部成员</option>--%>
+                          <%--</select>--%>
+                      <%--</section>--%>
+                      <%--<br>--%>
+                      <%--<button id="create">创建账户</button>--%>
+                      <%--<p class="message">已经有了一个账户? <a href="#">立刻登录</a></p>--%>
+                  <%--</form>--%>
                   <form class="login-form">
                       <input type="text" placeholder="用户名" id="user_name"/>
                       <input type="password" placeholder="密码" id="password"/>

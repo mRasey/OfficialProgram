@@ -64,33 +64,43 @@ public class CheckLogin extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 //        JSONObject jsonObject = new JSONObject();
         System.err.println("in checkRegister");
-        String name = req.getParameter("name");
-        String password = req.getParameter("password");
-        String job = req.getParameter("job");
-        System.out.println(name + " " + password + " " + job);
+        String name;
+        String password;
+        String job;
 
-        try {
-            sql = "SELECT 姓名 FROM 用户 WHERE 姓名 = " + $(name);
-            ResultSet resultSet = statement.executeQuery(sql);
-            if(resultSet.next()) {
-//                jsonObject.put("contain", "true");
-                resp.getWriter().print("true");
-                return;
+        if(req.getParameter("op").equals("checkIfExist")) {
+            System.out.println("in checkIfExist");
+            name = req.getParameter("name");
+            password = req.getParameter("password");
+            System.out.println(name + " " + password);
+
+            try {
+                sql = "SELECT name FROM 用户 WHERE name = " + $(name);
+                ResultSet resultSet = statement.executeQuery(sql);
+                if (resultSet.next()) {
+                    resp.getWriter().print("true");
+                    return;
+                }
+
+                resp.getWriter().print("false");
+            } catch (SQLException e) {
+                e.printStackTrace();
+                System.out.println("操作数据库出错");
+                resp.getWriter().print("error");
             }
-            sql = "INSERT " +
-                    "INTO 用户 " +
-                    "VALUES (" + $(name) + "," + $(password) + "," + $(job) + ");";
-            System.err.println(sql);
-            statement.executeUpdate(sql);
-//            jsonObject.put("contain", "false");
-            resp.getWriter().print("false");
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("操作数据库出错");
-//            jsonObject.put("contain", "error");
-            resp.getWriter().print("error");
         }
-
+        else if(req.getParameter("op").equals("submitAll")) {
+            try {
+                name = req.getParameter("name");
+                password = req.getParameter("password");
+                sql = "INSERT " +
+                        "INTO 用户 " +
+                        "VALUES (" + $(name) + "," + $(password) + ");";
+                statement.executeUpdate(sql);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
@@ -100,20 +110,6 @@ public class CheckLogin extends HttpServlet {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-    }
-
-    private boolean ifExist(String name) {
-        try {
-            sql = "SELECT * FROM users WHERE name = " + $(name);
-            ResultSet resultSet = statement.executeQuery(sql);
-            if(resultSet.next()) {
-                    return true;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("操作数据库出错");
-        }
-        return false;
     }
 
 
