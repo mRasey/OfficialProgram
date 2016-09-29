@@ -91,9 +91,7 @@
     var phone;
     var address;
     var job;
-//    if(index == 1) {
-//        document.getElementById("managementJob").style.display = "";
-//    }
+
     $('.next').click(function () {
         index = index + 1;
 
@@ -272,23 +270,26 @@
                 "op": "submitAll",
                 "name": name,
                 "password": password,
+                "job": job,
                 "email": email,
                 "realName": realName,
                 "phone": phone,
                 "address": address,
-                "job": job,
-                "management": document.getElementById("managementJob"),
-                "studioMajordomo": document.getElementById("studioMajordomo"),
-                "workingGroupPrincipal": document.getElementById("workingGroupPrincipal"),
-                "workingGroupMember1": document.getElementById("workingGroupMember1"),
-                "workingGroupMember2": document.getElementById("workingGroupMember2"),
-                "operationalDepartmentMember": document.getElementById("operationalDepartmentMember")
+                "management": document.getElementById("managementJob").value,
+                "studioMajordomo": document.getElementById("studioMajordomo").value,
+                "workingGroupPrincipal": document.getElementById("workingGroupPrincipal").value,
+                "workingGroupMember1": document.getElementById("workingGroupMember1").value,
+                "workingGroupMember2": document.getElementById("workingGroupMember2").value,
+                "operationalDepartmentMember": document.getElementById("operationalDepartmentMember").value
             },
             url: "CheckLogin"
         }).done(function (data) {
             if(data.toString() == "true") {
                 alert("注册成功");
-                self.location = "users/" + job + "/index.jsp";
+                self.location = "index.jsp";
+            }
+            else if(data.toString() == "error") {
+                alert("error");
             }
         });
         return false;
