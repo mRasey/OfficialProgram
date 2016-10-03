@@ -22,10 +22,10 @@ public class ContactsAdapter extends ArrayAdapter<Contact> {
     public View getView(int position, View convertView, ViewGroup parent) {
         Contact contact = getItem(position);
         View view;
-        ViewHolder viewHolder;
+        ContactsViewHolder viewHolder;
         if(convertView == null) {
             view = LayoutInflater.from(getContext()).inflate(resourceId, null);
-            viewHolder = new ViewHolder();
+            viewHolder = new ContactsViewHolder();
             viewHolder.headPortrait = (ImageView) view.findViewById(R.id.headPortrait);
             viewHolder.contactName = (TextView) view.findViewById(R.id.contactName);
             viewHolder.recentTime = (TextView) view.findViewById(R.id.recentTime);
@@ -34,7 +34,7 @@ public class ContactsAdapter extends ArrayAdapter<Contact> {
         }
         else {
             view = convertView;
-            viewHolder = (ViewHolder) view.getTag();
+            viewHolder = (ContactsViewHolder) view.getTag();
         }
         viewHolder.headPortrait.setImageResource(contact.headPortraitId);
         viewHolder.contactName.setText(contact.name);
@@ -44,7 +44,7 @@ public class ContactsAdapter extends ArrayAdapter<Contact> {
     }
 }
 
-class ViewHolder {
+class ContactsViewHolder {
     ImageView headPortrait;
     TextView contactName;
     TextView recentTime;

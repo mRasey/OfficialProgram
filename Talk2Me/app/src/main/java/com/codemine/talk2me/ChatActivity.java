@@ -11,6 +11,8 @@ import java.util.ArrayList;
 
 public class ChatActivity extends AppCompatActivity {
 
+    ArrayList<ChattingInfo> chattingInfos = new ArrayList<>();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -18,7 +20,7 @@ public class ChatActivity extends AppCompatActivity {
             getSupportActionBar().hide();
         setContentView(R.layout.activity_chat);
 
-        ArrayList<String> msg = new ArrayList<>();
+        initChattingInfo();
 
         TextView chattingWith = (TextView) findViewById(R.id.chattingWith);
         chattingWith.setText(getIntent().getStringExtra("contactName"));
@@ -32,6 +34,8 @@ public class ChatActivity extends AppCompatActivity {
         });
 
         ListView chatList = (ListView) findViewById(R.id.chattingListView);
+        ChattingAdapter chattingAdapter = new ChattingAdapter(ChatActivity.this, R.layout.chatting_item, chattingInfos);
+        chatList.setAdapter(chattingAdapter);
 
         TextView inputMsg = (TextView) findViewById(R.id.inputMsg);
         inputMsg.setOnClickListener(new View.OnClickListener() {
@@ -40,5 +44,12 @@ public class ChatActivity extends AppCompatActivity {
 
             }
         });
+    }
+
+    public void initChattingInfo() {
+        chattingInfos.add(new ChattingInfo(R.id.other_layout, R.id.own_layout, R.drawable.head,
+                R.drawable.head, "hellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohello", "", MsgType.OTHER));
+        chattingInfos.add(new ChattingInfo(R.id.other_layout, R.id.own_layout, R.drawable.head,
+                R.drawable.head, "", "worldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworldworld", MsgType.OWN));
     }
 }

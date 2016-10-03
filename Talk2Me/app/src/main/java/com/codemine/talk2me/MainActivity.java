@@ -33,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
                 Contact contact = contacts.get(position);
                 Intent intent = new Intent(MainActivity.this, ChatActivity.class);
                 intent.putExtra("contactName", contact.name);
+                intent.putExtra("contactHeadPortraitId", contact.headPortraitId);
                 startActivity(intent);
             }
         });
@@ -40,5 +41,6 @@ public class MainActivity extends AppCompatActivity {
 
     public void initContacts() {
         contacts.add(new Contact("billy", "hahaha", "now", R.drawable.head));
+        contacts.add(new Contact("wang", "2333", "now", R.drawable.dialog));
     }
 }
