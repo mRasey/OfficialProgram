@@ -23,8 +23,9 @@ public class MainActivity extends AppCompatActivity {
 
         initContacts(); // 初始化联系人列表
 
-        ContactsAdapter contactsAdapter = new ContactsAdapter(MainActivity.this, R.layout.contact_item, contacts);
         final ListView contractsList = (ListView) findViewById(R.id.contactsList);
+
+        ContactsAdapter contactsAdapter = new ContactsAdapter(MainActivity.this, R.layout.contact_item, contacts);
         contractsList.setAdapter(contactsAdapter);
 
         contractsList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -41,6 +42,6 @@ public class MainActivity extends AppCompatActivity {
 
     public void initContacts() {
         contacts.add(new Contact("billy", "hahaha", "now", R.drawable.head));
-        contacts.add(new Contact("wang", "2333", "now", R.drawable.dialog));
+        contacts.add(new Contact("wang", "2333", "now", R.drawable.head));
     }
 }

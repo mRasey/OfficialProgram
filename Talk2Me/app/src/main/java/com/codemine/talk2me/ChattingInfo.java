@@ -8,9 +8,19 @@ public class ChattingInfo {
     protected String otherDialogMsg;
     protected String ownDialogMsg;
     protected MsgType msgType;
+    protected String time;
+
+    public ChattingInfo(int ownHeadPortraitId, String ownDialogMsg, MsgType msgType, String time) {
+        this.otherLinearLayout = R.id.other_layout;
+        this.ownLinearLayout = R.id.own_layout;
+        this.ownHeadPortraitId = ownHeadPortraitId;
+        this.ownDialogMsg = ownDialogMsg;
+        this.msgType = msgType;
+        this.time = time;
+    }
 
     public ChattingInfo(int otherLinearLayout, int ownLinearLayout, int otherHeadPortraitId,
-                        int ownHeadPortraitId, String otherDialogMsg, String ownDialogMsg, MsgType msgType) {
+                        int ownHeadPortraitId, String otherDialogMsg, String ownDialogMsg, MsgType msgType, String time) {
         this.otherLinearLayout = otherLinearLayout;
         this.ownLinearLayout = ownLinearLayout;
         this.otherHeadPortraitId = otherHeadPortraitId;
@@ -18,6 +28,7 @@ public class ChattingInfo {
         this.otherDialogMsg = otherDialogMsg;
         this.ownDialogMsg = ownDialogMsg;
         this.msgType = msgType;
+        this.time = time;
     }
 }
 
