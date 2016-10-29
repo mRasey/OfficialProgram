@@ -20,7 +20,9 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical"
-            android:padding="50dp"
+            android:paddingLeft="30dp"
+            android:paddingRight="30dp"
+            android:paddingTop="120dp"
             android:visibility="visible">
 
 
@@ -60,6 +62,8 @@
 
             </LinearLayout>
 
+
+
         </LinearLayout>
 
         <LinearLayout
@@ -68,7 +72,9 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical"
-            android:padding="50dp">
+            android:paddingLeft="30dp"
+            android:paddingRight="30dp"
+            android:paddingTop="100dp">
 
             <EditText
                 android:id="@+id/register_account_edit"
@@ -120,6 +126,18 @@
 
             </LinearLayout>
 
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/progress_layout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone">
+
+            <ProgressBar
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"/>
 
         </LinearLayout>
     </FrameLayout>

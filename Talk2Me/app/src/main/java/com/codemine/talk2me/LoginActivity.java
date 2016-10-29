@@ -4,6 +4,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.InputType;
@@ -11,6 +12,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+
+import java.util.TimerTask;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -28,6 +31,7 @@ public class LoginActivity extends AppCompatActivity {
 
         final LinearLayout logInLayout = (LinearLayout) findViewById(R.id.login_layout);
         final LinearLayout registerLayout = (LinearLayout) findViewById(R.id.register_layout);
+        final LinearLayout progressLayout = (LinearLayout) findViewById(R.id.progress_layout);
 
         final Button loginButton = (Button) findViewById(R.id.login_button);
         final Button registerButton = (Button) findViewById(R.id.register_button);
@@ -43,11 +47,18 @@ public class LoginActivity extends AppCompatActivity {
         final int passwordInputType = registerPasswordEdit.getInputType();
 
         //登陆界面
+//        progressLayout.setVisibility(View.VISIBLE);
+//        loginButton.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                progressLayout.setVisibility(View.VISIBLE);
+//            }
+//        });
 
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                loginButton.setBackgroundColor(Color.rgb(255, 140, 0));
+//                loginButton.setBackgroundColor(Color.rgb(255, 140, 0));
                 final String account = accountEdit.getText().toString();
                 String password = passwordEdit.getText().toString();
                 dealResult.delete(0, dealResult.length());
@@ -58,46 +69,35 @@ public class LoginActivity extends AppCompatActivity {
                         dealResult
                 )).start();
 
-                while (dealResult.toString().equals(""));
+//                while (dealResult.toString().equals(""));
 
-                if(dealResult.toString().equals("login success")) {
-                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                    intent.putExtra("account", accountEdit.getText().toString());
-                    startActivity(intent);
-                    finish();
-                }
-                else if(dealResult.toString().equals("error password")) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this);
-                    builder.setMessage("密码错误");
-                    builder.setPositiveButton("确认", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
-                        }
-                    });
-                    builder.create().show();
-                }
-                else if(dealResult.toString().equals("error account")) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this);
-                    builder.setMessage("账号不存在");
-                    builder.setPositiveButton("确认", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
-                        }
-                    });
-                    builder.create().show();
-                }
-                else {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this);
-                    builder.setMessage("系统错误，请重试");
-                    builder.setPositiveButton("确认", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
-                        }
-                    });
-                    builder.create().show();
+                long startTime = System.currentTimeMillis();
+                while (true) {
+                    long nowTime = System.currentTimeMillis();
+                    if(dealResult.toString().equals("")) {
+                        if(nowTime - startTime < 5 * 1000)
+                            continue;
+                        alert("与服务器断开连接，请重试");
+                        progressLayout.setVisibility(View.GONE);
+                        break;
+                    }
+                    else if (dealResult.toString().equals("login success")) {
+                        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                        intent.putExtra("account", accountEdit.getText().toString());
+                        startActivity(intent);
+                        finish();
+                    } else if (dealResult.toString().equals("error password")) {
+                        alert("密码错误");
+                    } else if (dealResult.toString().equals("error account")) {
+                        alert("账号不存在");
+                    } else {
+                        alert("系统错误，请重试");
+                    }
+
+                    if(!dealResult.toString().equals("")) {
+                        progressLayout.setVisibility(View.GONE);
+                        break;
+                    }
                 }
             }
         });
@@ -224,48 +224,98 @@ public class LoginActivity extends AppCompatActivity {
                 registerRegisterButton.setClickable(false);
                 registerRegisterButton.setBackgroundColor(Color.rgb(220, 220, 220));
 
-                while(dealResult.toString().equals(""));
+//                long startTime = System.currentTimeMillis();
+//                while(dealResult.toString().equals("")) {
+//                    long nowTime = System.currentTimeMillis();
+//                    if(nowTime - startTime > 5 * 1000) {
+//                        AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this);
+//                        builder.setMessage("与服务器断开连接，请重试");
+//                        builder.setPositiveButton("确认", new DialogInterface.OnClickListener() {
+//                            @Override
+//                            public void onClick(DialogInterface dialog, int which) {
+//                                dialog.dismiss();
+//                            }
+//                        });
+//                        builder.create().show();
+//                        break;
+//                    }
+//                }
 
-                if(dealResult.toString().equals("account already exist")) {
-                    registerAccountEdit.setText("账号已存在");
-                    registerAccountEdit.setTextColor(Color.RED);
+                long startTime = System.currentTimeMillis();
+                while(true) {
+                    long nowTime = System.currentTimeMillis();
+                    if(dealResult.toString().equals("")) {
+                        if(nowTime - startTime > 5 * 1000)
+                            continue;
+                        AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this);
+                        builder.setMessage("与服务器断开连接，请重试");
+                        builder.setPositiveButton("确认", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        });
+                        builder.create().show();
+                        registerRegisterButton.setClickable(true);
+                        registerRegisterButton.setBackgroundColor(Color.rgb(78, 238, 148));
+                        break;
+                    }
+                    else if (dealResult.toString().equals("account already exist")) {
+                        registerAccountEdit.setText("账号已存在");
+                        registerAccountEdit.setTextColor(Color.RED);
+                    }
+                    else if (dealResult.toString().equals("register success")) {
+                        AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this);
+                        builder.setMessage("注册成功，请登录");
+                        builder.setPositiveButton("确认", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                                registerAccountEdit.getText().clear();
+                                registerPasswordEdit.getText().clear();
+                                registerConfirmPasswordEdit.getText().clear();
+                                registerEmailEdit.getText().clear();
+                                registerLayout.setVisibility(View.GONE);
+                                logInLayout.setVisibility(View.VISIBLE);
+                            }
+                        });
+                        builder.create().show();
+                    } else {
+                        AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this);
+                        builder.setMessage("注册失败，请重试");
+                        builder.setPositiveButton("确认", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        });
+                        builder.create().show();
+
+                    }
+
+                    if(!dealResult.toString().equals("")) {
+                        registerRegisterButton.setClickable(true);
+                        registerRegisterButton.setBackgroundColor(Color.rgb(78, 238, 148));
+                        break;
+                    }
                 }
-                if(dealResult.toString().equals("register success")) {
-//                    Toast.makeText(LoginActivity.this, "注册成功", Toast.LENGTH_SHORT);
-                    AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this);
-                    builder.setMessage("注册成功，请登录");
-                    builder.setPositiveButton("确认", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
-                            registerAccountEdit.getText().clear();
-                            registerPasswordEdit.getText().clear();
-                            registerConfirmPasswordEdit.getText().clear();
-                            registerEmailEdit.getText().clear();
-                            registerLayout.setVisibility(View.GONE);
-                            logInLayout.setVisibility(View.VISIBLE);
-                        }
-                    });
-                    builder.create().show();
-                }
-                else {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this);
-                    builder.setMessage("注册失败，请重试");
-                    builder.setPositiveButton("确认", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
-                        }
-                    });
-                    builder.create().show();
-                }
-                registerRegisterButton.setClickable(true);
-                registerRegisterButton.setBackgroundColor(Color.rgb(78, 238, 148));
             }
         });
     }
 
     public void checkLogin() {
 
+    }
+
+    private void alert(String info) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this);
+        builder.setMessage(info);
+        builder.setPositiveButton("确认", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        builder.create().show();
     }
 }

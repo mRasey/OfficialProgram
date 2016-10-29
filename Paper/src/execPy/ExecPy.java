@@ -30,7 +30,7 @@ public class ExecPy implements Runnable{
         try {
 
             System.out.println("check start");
-            Process checkProcess = Runtime.getRuntime().exec("python" + " " + checkPy + " " + classPath/*PyDirPath*/ + " " + DataDirPath);
+            Process checkProcess = Runtime.getRuntime().exec("python3.5" + " " + checkPy + " " + classPath/*PyDirPath*/ + " " + DataDirPath);
             String line;
 
             BufferedReader inputStream = new BufferedReader(new InputStreamReader(checkProcess.getInputStream()));
@@ -49,7 +49,7 @@ public class ExecPy implements Runnable{
             System.out.println("check end");
 
             System.out.println("modify start");
-            Process modifyProcess = Runtime.getRuntime().exec("python" + " " + modifyPy + " " + DataDirPath);
+            Process modifyProcess = Runtime.getRuntime().exec("python3.5" + " " + modifyPy + " " + DataDirPath);
 
             inputStream = new BufferedReader(new InputStreamReader(modifyProcess.getInputStream()));
             while ((line = inputStream.readLine()) != null) {
