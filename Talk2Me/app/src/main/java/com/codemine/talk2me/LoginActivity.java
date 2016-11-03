@@ -13,6 +13,10 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
 import java.util.TimerTask;
 
 public class LoginActivity extends AppCompatActivity {
@@ -32,9 +36,10 @@ public class LoginActivity extends AppCompatActivity {
         final LinearLayout logInLayout = (LinearLayout) findViewById(R.id.login_layout);
         final LinearLayout registerLayout = (LinearLayout) findViewById(R.id.register_layout);
         final LinearLayout progressLayout = (LinearLayout) findViewById(R.id.progress_layout);
-
+        final LinearLayout logLayout = (LinearLayout) findViewById(R.id.log_layout);
         final Button loginButton = (Button) findViewById(R.id.login_button);
         final Button registerButton = (Button) findViewById(R.id.register_button);
+        final Button loggingButton = (Button) findViewById(R.id.logging_button);
         final EditText accountEdit = (EditText) findViewById(R.id.account_edit);
         final EditText passwordEdit = (EditText) findViewById(R.id.password_edit);
 
@@ -59,16 +64,18 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 //                loginButton.setBackgroundColor(Color.rgb(255, 140, 0));
+                logLayout.setVisibility(View.GONE);
+                loggingButton.setVisibility(View.VISIBLE);
+
                 final String account = accountEdit.getText().toString();
                 String password = passwordEdit.getText().toString();
                 dealResult.delete(0, dealResult.length());
-                new Thread(new SocketOperation(
-                        "login"
-                        + " " + account
-                        + " " + password,
-                        dealResult
-                )).start();
-
+                HashMap<String, String> infoMap = new HashMap<>();
+                infoMap.put("op", "login");
+                infoMap.put("account", account);
+                infoMap.put("password", password);
+                JSONObject jsonObject = new JSONObject(infoMap);
+                new Thread(new SocketOperation(jsonObject, dealResult)).start();
 //                while (dealResult.toString().equals(""));
 
                 long startTime = System.currentTimeMillis();
@@ -99,6 +106,9 @@ public class LoginActivity extends AppCompatActivity {
                         break;
                     }
                 }
+
+                loggingButton.setVisibility(View.GONE);
+                logLayout.setVisibility(View.VISIBLE);
             }
         });
 
@@ -214,13 +224,13 @@ public class LoginActivity extends AppCompatActivity {
                 }
 
                 dealResult = dealResult.delete(0, dealResult.length());
-                new Thread(new SocketOperation(
-                                "register"
-                                + " " + account
-                                + " " + password
-                                + " " + emailAddress,
-                                dealResult
-                            )).start();
+                Map<String, String> map = new HashMap<>();
+                map.put("op", "register");
+                map.put("account", account);
+                map.put("password", password);
+                map.put("emailAddress", emailAddress);
+                JSONObject jsonObject = new JSONObject(map);
+                new Thread(new SocketOperation(jsonObject, dealResult)).start();
                 registerRegisterButton.setClickable(false);
                 registerRegisterButton.setBackgroundColor(Color.rgb(220, 220, 220));
 

@@ -55,7 +55,7 @@ public class ExtractXML {
             BufferedInputStream bis = new BufferedInputStream(zipFile.getInputStream(zipEntry));
 //            System.out.println(zipEntry.getName());
             String absolutePath = zipEntry.getName();
-            String dir = fileName.substring(0, fileName.indexOf(".") + 1) + "/" + absolutePath.substring(0, absolutePath.lastIndexOf("/") + 1);
+            String dir = fileName.substring(0, fileName.indexOf(".")) + "/" + absolutePath.substring(0, absolutePath.lastIndexOf("/") + 1);
             String name = absolutePath.substring(absolutePath.lastIndexOf("/") + 1);
             new File(filePath + dir).mkdirs();
             FileOutputStream fos = new FileOutputStream(filePath + dir + name);

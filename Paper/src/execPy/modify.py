@@ -1,4 +1,4 @@
-# -*- coding:gb2312 -*-
+# -*- coding:utf-8 -*-
 
 import zipfile
 from lxml import etree
@@ -8,21 +8,23 @@ import shutil
 import time
 import os
 import tempfile
+# import charset
 
-Data_DirPath = sys.argv[1]#ÊäÈëÎÄ¼ş¼ĞµÄÂ·¾¶,ÃüÁîĞĞµÄµÚ¶ş¸ö²ÎÊı
+Data_DirPath = sys.argv[1]#è¾“å…¥æ–‡ä»¶å¤¹çš„è·¯å¾„,å‘½ä»¤è¡Œçš„ç¬¬äºŒä¸ªå‚æ•°
 
 Docx_Filename = Data_DirPath + 'origin.docx'
-Checkout_Filename = Data_DirPath + 'check_out1.txt'
-ModifySpace_FileName = Data_DirPath + 'space.txt'
+Checkout_Filename = Data_DirPath + 'check_out1'
+ModifySpace_FileName = Data_DirPath + 'space'
 
-# Docx_Filename=raw_input("please input the path of your docx:")
-# Checkout_Filename='check_out1.txt'
-# ModifySpace_FileName='space.txt'
+#Docx_Filename = input("please input the path of your docx:")
+# Docx_Filename = "test.docx"
+# Checkout_Filename='check_out1'
+# ModifySpace_FileName = 'space'
 
 word_schema='{http://schemas.openxmlformats.org/wordprocessingml/2006/main}'
-Unicode_bt = 'gb2312'#ÖĞÎÄ×Ö·û±àÂë·½Ê½£¬ÎÒµÄ»úÆ÷ÉÏÊÇgb2312£¬·şÎñÆ÷ÉÏÊÇutf-8£¬»¹ÓĞ¸ö±ğ»úÆ÷ÉÏÊÇGBK
+Unicode_bt = 'utf-8'
 
-#ÒÔÏÂ4¸öº¯ÊıÊÇ¹ØÓÚ ½âÑ¹ËõwordÎÄµµºÍ¶ÁÈ¡xmlÄÚÈİ²¢°´½Úµã±êÇ©¶ÔÊ÷ĞÎ½á¹¹½øĞĞµü´ú
+#ä»¥ä¸‹4ä¸ªå‡½æ•°æ˜¯å…³äº è§£å‹ç¼©wordæ–‡æ¡£å’Œè¯»å–xmlå†…å®¹å¹¶æŒ‰èŠ‚ç‚¹æ ‡ç­¾å¯¹æ ‘å½¢ç»“æ„è¿›è¡Œè¿­ä»£
 def get_word_xml(docx_filename):
     zipF = zipfile.ZipFile(docx_filename)
     xml_content = zipF.read('word/document.xml')
@@ -39,15 +41,6 @@ def _iter(my_tree,type_char):
 
 def _check_element_is(element,type_char):
     return element.tag == '%s%s' % (word_schema,type_char)
- 
-#»ñÈ¡½Úµã°üº¬µÄÎÄ±¾ÄÚÈİ
-def get_ptext(w_p):
-    ptext = ''
-    for node in w_p.iter(tag=etree.Element):
-        if _check_element_is(node,'t'):
-            ptext += node.text
-    return ptext.encode(Unicode_bt,'ignore')#±»¼ì²âµÄÂÛÎÄÖĞ¿ÉÄÜ³öÏÖÆæ¹ÖµÄ¸ù±¾ÎŞ·¨½âÂë×Ö·û±ÈÈç¸ÃÍ¬Ñ§´ÓÆäËûµØ·½ÂÒÕ³Ìù¶«Î÷£¬Òò´Ë¼ÓÉÏ¸öignore²ÎÊıºöÂÔ·Ç·¨×Ö·û
-
 
 def has_key(node,attribute):
     return '%s%s' %(word_schema,attribute) in node.keys()
@@ -56,10 +49,10 @@ def get_val(node,attribute):
     if has_key(node,attribute):
         return node.get('%s%s' %(word_schema,attribute))
     else:
-        return 'Î´»ñÈ¡ÊôĞÔÖµ'
+        return 'æœªè·å–å±æ€§å€¼'
 
 def read_error(filename):
-    #ÒòÎªÎÄ¼şÀï¶ÎÂä¿ÉÄÜ²»ÊÇµİÔöµÄ£¬ÕâÀï×îºÃĞ´Ò»¸öÅÅĞò¡£¶ÔÒÔºó¸Ä´íÓĞ°ïÖú
+    #å› ä¸ºæ–‡ä»¶é‡Œæ®µè½å¯èƒ½ä¸æ˜¯é€’å¢çš„ï¼Œè¿™é‡Œæœ€å¥½å†™ä¸€ä¸ªæ’åºã€‚å¯¹ä»¥åæ”¹é”™æœ‰å¸®åŠ©
     rp = open(filename,'r')
     error_dct=[]
     for line in rp:
@@ -69,7 +62,7 @@ def read_error(filename):
         group1['location'] = group[1]
         group1['kind'] = group[2]
         group1['type'] = group[3]
-        group1['rightValue'] = group[4][:-1].decode('gbk')#È¥µô'\n'
+        group1['rightValue'] = group[4][:-1]#å»æ‰'\n'
         error_dct.append(group1)
     return error_dct
 
@@ -119,27 +112,26 @@ def modify(xml_tree,errorlist):
                                 txt=t.text
                                 t.text=txt[:pos]+' '+txt[pos:]
                                 t.set('%s%s' % ('{http://www.w3.org/XML/1998/namespace}','space'), 'preserve')
-                                #print t.text
         while listCount<len(errorlist) and paraNum == int(errorlist[listCount]['paraNum']):
             if errorlist[listCount]["location"] in ['abstr5','abstr6'] and errorlist[listCount]["type"] in ["fontCN",'fontEN','fontSize','fontShape']:
-                pat = re.compile("¹Ø|¼ü|´Ê|£º|:| | ")
+                pat = re.compile("å…³|é”®|è¯|ï¼š|:| | ")
                 locate = 'abstr5'
                 nextT = False
                 for r in _iter(paragr, "r"):
                     if locate == "abstr5":
                         rtext = ''
                         for t in _iter(r,'t'):
-                            rtext += t.text.encode(Unicode_bt,'ignore')
+                            rtext += t.text
                         if (pat.sub("", rtext) != "" and not (('KEY'in rtext or 'key' in rtext or "Key" in rtext or 'WORD'in rtext or'word' in rtext)\
                  or 'keyword'in rtext or 'Keyword'in rtext or'KEYWORD'in rtext)) or nextT:
                             locate = 'abstr6'
-                        if ":" in rtext or "£º" in rtext:
+                        if ":" in rtext or "ï¼š" in rtext:
                             nextT = True
                     if errorlist[listCount]['type'] == 'fontCN':
                         if locate == 'abstr5':
-                            modify_rpr(r,'rFonts','eastAsia','ºÚÌå'.decode(Unicode_bt))
+                            modify_rpr(r,'rFonts','eastAsia','é»‘ä½“')
                         elif locate == 'abstr6':
-                            modify_rpr(r,'rFonts','eastAsia','ËÎÌå'.decode(Unicode_bt))
+                            modify_rpr(r,'rFonts','eastAsia','å®‹ä½“')
                     elif errorlist[listCount]['type'] == 'fontEN':
                         modify_rpr(r,'rFonts','ascii','Times New Roman')
                     elif errorlist[listCount]['type'] == 'fontSize':
@@ -158,27 +150,27 @@ def modify(xml_tree,errorlist):
                     rtext = ""
                     for tab in _iter(r,"tab"):
                         r.remove(tab)
-                    pat = re.compile(' |¡¡+')
+                    pat = re.compile(' |ã€€+')
                     for t in _iter(r, 't'):
-                        rtext = t.text.encode(Unicode_bt, 'ignore')
+                        rtext = t.text
                     if len(pat.sub("", rtext)) == 0:
                         continue
                     else:
                         break
                 listCount += 1
             elif errorlist[listCount]['type'] == "startWithSpace":
-                pat = re.compile(' |¡¡+')
+                pat = re.compile(' |ã€€+')
                 for r in _iter(paragr, 'r'):
                     rtext = ''
                     for t in _iter(r, 't'):
-                        rtext = t.text.encode(Unicode_bt, 'ignore')
+                        rtext = t.text
                     if pat.match(rtext):
                         if len(pat.sub("", rtext)) == 0:
                             for t in _iter(r, 't'):
                                 t.text = ""
                         else:
                             for t in _iter(r, 't'):
-                                t.text = pat.sub("", rtext).decode(Unicode_bt)
+                                t.text = pat.sub("", rtext)
                             break
                     else:
                         break
@@ -241,6 +233,25 @@ def modify(xml_tree,errorlist):
                             ind = pPr[0]
                             ind.set('%s%s' % (word_schema, 'leftChars'), '0')
                             ind.set('%s%s' % (word_schema, 'left'), '0')
+                        # print etree.tostring(pPr,pretty_print = True)
+                        break
+                listCount = listCount + 1
+            elif errorlist[listCount]['type'] == 'parahanging' or errorlist[listCount]['type'] == 'parahangingChars':
+                for pPr in paragr:
+                    if _check_element_is(pPr, 'pPr'):
+                        found_ind = False
+                        # print etree.tostring(pPr,pretty_print = True)
+                        for ind in pPr:
+                            if _check_element_is(ind, 'ind'):
+                                found_ind = True
+                                ind.set('%s%s' % (word_schema, 'hangingChars'), '0')
+                                ind.set('%s%s' % (word_schema, 'hanging'), '0')
+                                break
+                        if found_ind == False:
+                            pPr.insert(0, etree.Element('%s%s' % (word_schema, 'ind')))
+                            ind = pPr[0]
+                            ind.set('%s%s' % (word_schema, 'hangingChars'), '0')
+                            ind.set('%s%s' % (word_schema, 'hanging'), '0')
                         # print etree.tostring(pPr,pretty_print = True)
                         break
                 listCount = listCount + 1
@@ -475,7 +486,7 @@ def modify(xml_tree,errorlist):
                 listCount += 1
 
 startTime=time.time()  
-#Ö÷³ÌĞò__main__Èë¿Ú²î²»¶àÔÚÕâÀïÁË
+#ä¸»ç¨‹åº__main__å…¥å£å·®ä¸å¤šåœ¨è¿™é‡Œäº†
 xml_from_file,style_from_file = get_word_xml(Docx_Filename)
 xml_tree = get_xml_tree(xml_from_file)
 #sys.exit()
@@ -489,15 +500,15 @@ s = ''
 modify(xml_tree,errorlist)
 endTime=time.time()
 
-#---zqd ĞÂÔö 20160121-------------------------------------------------
+#---zqd æ–°å¢ 20160121-------------------------------------------------
 zipF = zipfile.ZipFile(Docx_Filename)
-#´´½¨ÁÙÊ±Ä¿Â¼
+#åˆ›å»ºä¸´æ—¶ç›®å½•
 tmp_dir = tempfile.mkdtemp()
-#°ÑÔ­À´µÄdocx½âÑ¹µ½ÁÙÊ±Ä¿Â¼
+#æŠŠåŸæ¥çš„docxè§£å‹åˆ°ä¸´æ—¶ç›®å½•
 zipF.extractall(tmp_dir)
-#°ÑĞÂµÄxmlĞ´µ½ÀïÃæ
+#æŠŠæ–°çš„xmlå†™åˆ°é‡Œé¢
 with open(os.path.join(tmp_dir,'word/document.xml'),'w') as f:
-    xmlstr = etree.tostring (xml_tree, pretty_print=False,encoding="UTF-8")#´Ë´¦²»Ê¶±ğ'gb2312'
+    xmlstr = etree.tostring (xml_tree, pretty_print=False,encoding="UTF-8").decode("utf-8")#æ­¤å¤„ä¸è¯†åˆ«'gb2312'
     f.write(xmlstr)
 
 # Get a list of all the files in the original docx zipfile
@@ -511,4 +522,4 @@ with zipfile.ZipFile(zip_copy_filename, "w") as docx:
 # Clean up the temp dir
 shutil.rmtree(tmp_dir)
 #-----------------------------------------------             
-print endTime - startTime
+print(endTime - startTime)

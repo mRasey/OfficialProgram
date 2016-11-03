@@ -23,7 +23,7 @@ public class AnalyXML {
     private static String contentTypeXmlPath = docPath + docName + "/[Content_Types].xml";
     private static String docXmlRelsPath = docPath + docName + "/word/_rels/document.xml.rels";
     private static final String tempPath = String.valueOf(AnalyXML.class.getResource(""));
-    private static final String classPath = tempPath.substring(tempPath.indexOf("/") + 1);
+    private static final String classPath = tempPath.substring(tempPath.indexOf("/"));
     private static final String comXmlPath = classPath + "comments.xml";//comment.xml的文件路径
     private HashMap<Integer, ArrayList<String>> idToComment = new HashMap<>();
     private File txtFile;

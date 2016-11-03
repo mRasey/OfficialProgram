@@ -1,35 +1,45 @@
-# -*- coding:gb2312 -*-
+# -*- coding:utf-8 -*-
 
 import zipfile
 from lxml import etree
 import re
-import sys
-import shutil
 import time
-import os
-import tempfile
+import sys
 
-Rule_DirPath = sys.argv[1]#ÊäÈëÎÄ¼ş¼ĞµÄÂ·¾¶,ÃüÁîĞĞµÄµÚ¶ş¸ö²ÎÊı
-Data_DirPath = sys.argv[2]#Êä³öÎÄ¼ş¼ĞµÄÂ·¾¶£¬ÃüÁîĞĞµÄµÚÈı¸ö²ÎÊı
+Rule_DirPath = sys.argv[1]#è¾“å…¥æ–‡ä»¶å¤¹çš„è·¯å¾„,å‘½ä»¤è¡Œçš„ç¬¬äºŒä¸ªå‚æ•°
+Data_DirPath = sys.argv[2]#è¾“å‡ºæ–‡ä»¶å¤¹çš„è·¯å¾„ï¼Œå‘½ä»¤è¡Œçš„ç¬¬ä¸‰ä¸ªå‚æ•°
 
-Rule_Filename = Rule_DirPath + 'rules.txt'
+Rule_Filename = Rule_DirPath + 'rules'
 Docx_Filename = Data_DirPath + 'origin.docx'
 
-# Docx_Filename= raw_input("please input the path of your docx:")
-# Rule_Filename='rules.txt'
-
 word_schema='{http://schemas.openxmlformats.org/wordprocessingml/2006/main}'
-Unicode_bt ='gb2312' #ÖĞÎÄ×Ö·û±àÂë·½Ê½£¬ÎÒµÄ»úÆ÷ÉÏÊÇgb2312£¬·şÎñÆ÷ÉÏÊÇutf-8£¬»¹ÓĞ¸ö±ğ»úÆ÷ÉÏÊÇGBK
+Unicode_bt ='utf-8'
+# Rule_Filename='rules'
 
-#ÒÔÏÂ4¸öº¯ÊıÊÇ¹ØÓÚ½âÑ¹ËõwordÎÄµµºÍ¶ÁÈ¡xmlÄÚÈİ²¢°´½Úµã±êÇ©¶ÔÊ÷ĞÎ½á¹¹½øĞĞµü´ú
-def get_word_xml(docx_filename):
-    zipF = zipfile.ZipFile(docx_filename)
-    xml_content = zipF.read('word/document.xml')
-    style_content=zipF.read('word/styles.xml')
-    return xml_content,style_content
+def read_rules(filename):
+    f = open(filename,'r')
+    rules_dct={}        
+    for line in f: #fä¸ºunicode
+        if line.startswith('{'):
+            group=line[1:-3].split(',')
+            for factor in group:
+                _key = factor[:factor.index(':')]
+                _val = factor[factor.index(':')+1:]
+                if _key == 'key':
+                    rule_dkey = _val
+                    rules_dct.setdefault(_val,{})
+                if _key!= 'key':
+                    rules_dct[rule_dkey].setdefault(_key,_val)
+    f.close()
+    return rules_dct
 
-def get_xml_tree(xml_string):
-    return etree.fromstring(xml_string)
+#è·å–èŠ‚ç‚¹åŒ…å«çš„æ–‡æœ¬å†…å®¹
+def get_ptext(w_p):
+    ptext = ''
+#-modified by zqd 20160125-----------------------
+    for node in w_p.iter(tag="%s%s"%(word_schema,"t")):
+        ptext += node.text
+    return ptext
 
 def _iter(my_tree,type_char):
     for node in my_tree.iter(tag=etree.Element):
@@ -38,217 +48,125 @@ def _iter(my_tree,type_char):
 
 def _check_element_is(element,type_char):
     return element.tag == '%s%s' % (word_schema,type_char)
- 
-#»ñÈ¡½Úµã°üº¬µÄÎÄ±¾ÄÚÈİ
-def get_ptext(w_p):
-    ptext = ''
-#-modified by zqd 20160125-----------------------
-    for node in w_p.iter(tag=etree.Element):
-        if _check_element_is(node,'t'):
-            ptext += node.text
-    return ptext.encode(Unicode_bt,'ignore') #±»¼ì²âµÄÂÛÎÄÖĞ¿ÉÄÜ³öÏÖÆæ¹ÖµÄ¸ù±¾ÎŞ·¨½âÂë×Ö·û±ÈÈç¸ÃÍ¬Ñ§´ÓÆäËûµØ·½ÂÒÕ³Ìù¶«Î÷£¬Òò´Ë¼ÓÉÏ¸öignore²ÎÊıºöÂÔ·Ç·¨×Ö·û
 
-#µÃµ½±êÌâµÄµÈ¼¶
-def get_level(w_p):
-    for pPr in w_p:
-        if _check_element_is(pPr,'pPr'):
-            for pPr_node in pPr:
-                if _check_element_is(pPr_node,'outlineLvl'):
-                    return pPr_node.get('%s%s' %(word_schema,'val'))
-                
-                if _check_element_is(pPr_node,'pStyle'):
-                    style_xml = etree.fromstring(zipfile.ZipFile(Docx_Filename).read('word/styles.xml'))
-                    styleID = pPr_node.get('%s%s' %(word_schema,'val'))
-                    flag = 1
-                    while flag == 1 :
-                        #print 'style',styleID
-                        flag = 0
-                        for style in _iter(style_xml,'style'):
-                            if style.get('%s%s' %(word_schema,'styleId')) == styleID:
-                                for style_node in style:
-                                    if _check_element_is(style_node,'pPr'):
-                                        for pPr_node in style_node:
-                                            if _check_element_is(pPr_node,'outlineLvl'):
-                                                return pPr_node.get('%s%s' %(word_schema,'val'))
-                                    if _check_element_is(style_node,'basedOn'):
-                                        styleID = style_node.get('%s%s' %(word_schema,'val'))
-                                        flag = 1               
-
-#-----------------------------    
-#ÒÔÏÂ5¸öº¯ÊıÓÃÀ´ »ñÈ¡ÎÄ±¾¶ÔÓ¦µÄ¸ñÊ½ĞÅÏ¢
-#³õÊ¼»¯Ò»¸ö¸ñÊ½×Öµä£¬×Ö¶ÎÖµµÄÀàĞÍÎª·½±ã´¦Àí¾ùÎªstr£¬ÖµµÄ¶¨ÒåºÍ·¶Î§¿ÉÒÔ²Î¿¼ÎÄµµ
-def init_fd(d):
-    d['fontCN']='ËÎÌå'
-    d['fontEN']='Times New Roman'
-    d['fontSize']='21'#ÒòÎªwordÀïÄ¬ÈÏÊÇ21
-    d['paraAlign']='both'
-    d['fontShape']='0'
-    d['paraSpace']='240'
-    d['paraIsIntent']="0"
-    d['paraIsIntent1']='0'
-    d['paraFrontSpace']='0'
-    d['paraAfterSpace']='0'
-    d['paraGrade']='0'
-    d['leftChars'] = '0'
-    d['left'] = '0'
-    return d
-
-def has_key(node,attribute):
-    return '%s%s' %(word_schema,attribute) in node.keys()
-
-def get_val(node,attribute):
-    if has_key(node,attribute):
-        return node.get('%s%s' %(word_schema,attribute))
-    else:
-        return 'Î´»ñÈ¡ÊôĞÔÖµ'
-
-#»ñÈ¡µÄ¸ñÊ½ĞÅÏ¢¸³¸øµ±Ç°½ÚµãµÄ¸ñÊ½×Öµä
-def assign_fd(node,d):
-    for detail in node.iter(tag=etree.Element):
-#------20160314 zqd----------------------------------
-        if _check_element_is(detail,'rFonts'):
-            if has_key(detail,'eastAsia'):#ÓĞ´ËÊôĞÔ
-                d['fontCN'] = get_val(detail,'eastAsia').encode(Unicode_bt)
-            if has_key(detail,'ascii'):
-                d['fontEN'] = get_val(detail,'ascii').encode(Unicode_bt)
-#--------------------------------------------
-        elif _check_element_is(detail,'sz'):
-            d['fontSize'] = get_val(detail,'val')
-
-        elif _check_element_is(detail,'jc'):
-            d['paraAlign'] = get_val(detail,'val')
-
-        elif _check_element_is(detail,'b'):
-            if has_key(detail,'val'):
-                if get_val(detail, 'val') != '0' and get_val(detail, 'val') != 'false':
-                    d['fontShape'] = '1'#±íÊ¾bold
-                else:
-                    #print 'not blod'
-                    d['fontShape'] = '0'
-            else:
-                d['fontShape'] = '1'#±íÊ¾bold
-
-        elif _check_element_is(detail,'spacing'):
-            if has_key(detail,'line'):
-                d['paraSpace'] = get_val(detail,'line')
-            if has_key(detail,'before'):
-                d['paraFrontSpace']= get_val(detail,'before')
-            if has_key(detail,'after'):
-                d['paraAfterSpace']= get_val(detail,'after')
-#--------20160313 zqd----------------------------------------
-        elif _check_element_is(detail,'ind'):
-            if has_key(detail,'left'):
-                d['left'] = get_val(detail,"left")
-            if has_key(detail,"leftChars"):
-                d['leftChars'] = get_val(detail,'leftChars')
-            if has_key(detail,'firstLine'):
-                d['paraIsIntent']=get_val(detail,'firstLine')
-            if has_key(detail,'firstLineChars'):
-                d['paraIsIntent1']=get_val(detail,'firstLineChars')
-#-------------------------------------------------
-        elif _check_element_is(detail,'outlineLvl'):
-            d['paraGrade'] = get_val(detail,'val')
-    return d
-
-def get_default_styleId():
-    for style in _iter(style_tree,'style'):
-        if get_val(style,"type") == "paragraph":
-            for name in _iter(style,"name"):
-                if get_val(name,"val")=="Normal":
-                    return get_val(style,"styleId")
-
-#----20160314 zqd------------
-def get_style_format(styleID,d):
-    for style in _iter(style_tree,'style'):
-        if get_val(style,'styleId') == styleID:#get_valÊÇÊôĞÔ
-            for detail in style.iter(tag=etree.Element):
-                if _check_element_is(detail,'basedOn'):
-                    styleID1 = get_val(detail,'val')
-                    get_style_format(styleID1,d)
-                if _check_element_is(detail,'pPr'):
-                    assign_fd(detail,d)
-
-def get_style_rpr(styleID,d):
-    for style in _iter(style_tree,'style'):
-        if get_val(style,'styleId') == styleID:#get_valÊÇÊôĞÔ
-            for detail in style.iter(tag=etree.Element):
-                if _check_element_is(detail,'basedOn'):
-                    styleID1 = get_val(detail,'val')
-                    get_style_rpr(styleID1,d)
-                if _check_element_is(detail,"rPr"):
-                    assign_fd(detail,d)
-            
-#»ñÈ¡¸ñÊ½
-def get_format(node,d):
-    init_fd(d)
-    defaultId = get_default_styleId()
-    get_style_format(defaultId,d)
-    #¹ØÓÚÎÒµÄ2013°æµÄwordµÄpPrÏÂµÄrPr²»Æğ×÷ÓÃ
-    for pPr in _iter(node,'pPr'):
-        for pstyle in _iter(pPr,'pStyle'):
-            styleID = get_val(pstyle,'val')
-            get_style_format(styleID,d)
-        assign_fd(pPr,d)
-    d['fontCN']='ËÎÌå'
-    d['fontEN']='Times New Roman'
-    d['fontSize']='21'
-    d['fontShape']='0'
-    get_style_rpr(defaultId,d)
-    for pPr in _iter(node,'pPr'):
-        for pstyle in _iter(pPr,'pStyle'):
-            styleID = get_val(pstyle,'val')
-            get_style_rpr(styleID,d)
-    return d
-
-#--------------------------------------------------
 def first_locate():
     paraNum = 0
     part[1] = 'cover'
     reference = []
     current_part = ''
-    for paragr in _iter(xml_tree,'p'):
+    inmenu = True
+    for paragr in xml_tree.iter(tag = '%s%s'%(word_schema,"p")):
         paraNum += 1
         text = get_ptext(paragr)
+        if current_part == 'menu':
+            fldlist = []
+            for fldChar in _iter(paragr, "fldChar"):
+                fldlist.append(fldChar.get("%s%s" % (word_schema, "fldCharType")))
+            if 'end' in fldlist and 'begin' not in fldlist:
+                inmenu = False
         if not text or text == ' ' or text == '':
             continue
-        for r in paragr.iter(tag=etree.Element):
-            if _check_element_is(r, 'r'):
-                for instr in r.iter(tag=etree.Element):
-                    if _check_element_is(instr, 'instrText'):
-                        refer = False
-                        if "REF _Ref" in instr.text:
-                            refer = True
-                        if refer is True:
-                            reference.append((instr.text[8:].split())[0])
-        if '±¾ÈËÉùÃ÷' in text:
-            current_part = part[paraNum] = 'statement'
-        elif '±±¾©º½¿Õº½Ìì´óÑ§' in text  or '±¾¿ÆÉú±ÏÒµÉè¼Æ£¨ÂÛÎÄ£©ÈÎÎñÊé' in text:
-            current_part = part[paraNum] = 'taskbook'
-        elif 'ÂÛÎÄ·âÃæÊé¼¹' in text:
+        if 'è®ºæ–‡å°é¢ä¹¦è„Š' in text:
             current_part = part[paraNum] = 'spine'
-        elif re.compile(r'Õª *Òª').match(text):
+        elif text.startswith("åŒ—äº¬èˆªç©ºèˆªå¤©å¤§å­¦") or 'æœ¬ç§‘ç”Ÿæ¯•ä¸šè®¾è®¡ï¼ˆè®ºæ–‡ï¼‰ä»»åŠ¡ä¹¦' in text:
+            current_part = part[paraNum] = 'taskbook'
+        elif 'æœ¬äººå£°æ˜' in text:
+            current_part = part[paraNum] = 'statement'
+        elif re.compile(r'æ‘˜ *è¦').match(text) and 'abstract' not in part.values():
             current_part = part[paraNum] = 'abstract'
-        elif 'Abstract' in text or 'abstract' in text or 'ABSTRACT' in text:
+        elif ('Abstract' in text or 'abstract' in text or 'ABSTRACT' in text) and 'abstract_en' not in part.values():
             current_part = part[paraNum] = 'abstract_en'
-        elif re.compile(r'Ä¿ *Â¼').match(text) or re.compile(r'Í¼ *Ä¿ *Â¼').match(text) or re.compile(r'±í *Ä¿ *Â¼').match(text) or re.compile(r'Í¼ *±í *Ä¿ *Â¼').match(text):
+        elif re.compile(r'ç›® *å½•').match(text) or re.compile(r'å›¾ *ç›® *å½•').match(text) or re.compile(r'è¡¨ *ç›® *å½•').match(text) or re.compile(r'å›¾ *è¡¨ *ç›® *å½•').match(text):
             current_part = part[paraNum] = 'menu'
-        elif (current_part == 'menu' and not text[-1].isdigit()) or( re.compile(r'.*Ğ÷ *ÂÛ').match(text) and not text[-1].isdigit()):
+        elif (current_part == 'menu' and inmenu == False):
             current_part = part[paraNum] = 'body'
-        elif text == '²Î¿¼ÎÄÏ×':
+        elif text == 'å‚è€ƒæ–‡çŒ®':
             current_part = part[paraNum] = 'refer'
-        elif text.startswith('¸½Â¼'):
+        elif text.startswith('é™„å½•'):
             current_part = part[paraNum] = 'appendix'
     if not 'statement' in part.values():
-        print 'warning: statement doesnot exsit'
+        print('warning: statement doesnot exsit')
     if not 'spine' in part.values():
-        print 'warning: spine'
+        print('warning: spine')
     if not 'abstract' in part.values():
-        print 'warning: abstract'
+        print('warning: abstract')
     if not 'body' in part.values():
-        print 'warning: body'
+        print('warning: body')
     if not 'menu' in part.values():
-        print 'warning: menu'
+        print('warning: menu')
     return reference
+
+# å¾—åˆ°æ ‡é¢˜çš„ç­‰çº§
+def get_level(w_p):
+    for pPr in w_p:
+        if _check_element_is(pPr, 'pPr'):
+            for pPr_node in pPr:
+                if _check_element_is(pPr_node, 'outlineLvl'):
+                    return pPr_node.get('%s%s' % (word_schema, 'val'))
+                if _check_element_is(pPr_node, 'pStyle'):
+                    style_xml = etree.fromstring(zipfile.ZipFile(Docx_Filename).read('word/styles.xml'))
+                    styleID = pPr_node.get('%s%s' % (word_schema, 'val'))
+                    flag = 1
+                    while flag == 1:
+                        # print 'style',styleID
+                        flag = 0
+                        for style in style_xml.iter(tag="%s%s"%(word_schema,'style')):
+                            if style.get('%s%s' % (word_schema, 'styleId')) == styleID:
+                                for style_node in style:
+                                    if _check_element_is(style_node, 'pPr'):
+                                        for pPr_node in style_node:
+                                            if _check_element_is(pPr_node, 'outlineLvl'):
+                                                return pPr_node.get('%s%s' % (word_schema, 'val'))
+                                    if _check_element_is(style_node, 'basedOn'):
+                                        styleID = style_node.get('%s%s' % (word_schema, 'val'))
+                                        flag = 1
+
+#åœ¨åˆ¤åˆ«æ–‡æœ¬ä»¥ä»€ä¹ˆå¼€å¤´çš„æ–¹æ³•ä¸Šä½¿ç”¨äº†æ­£åˆ™è¡¨è¾¾å¼
+def analyse(text):
+    text=text.strip(' ')
+    if text.isdigit():
+        return 'body'
+    pat1 = re.compile('[0-9]+')#ä»¥æ•°å­—å¼€å¤´çš„æ­£åˆ™è¡¨è¾¾å¼
+    pat2 = re.compile('[0-9]+\\.[0-9]')#ä»¥X.Xå¼€å¤´çš„æ­£åˆ™è¡¨è¾¾å¼
+    pat3 = re.compile('[0-9]+\\.[0-9]\\.[0-9]')#ä»¥X.X.Xå¼€å¤´çš„æ­£åˆ™è¡¨è¾¾å¼
+    pat4 = re.compile('å›¾(\s)*[0-9]+((\\.|-)[0-9])*')#å›¾æ ‡é¢˜çš„æ­£åˆ™è¡¨è¾¾å¼
+    pat5 = re.compile('è¡¨(\s)*[0-9]+((\\.|-)[0-9])*')#è¡¨æ ‡é¢˜çš„æ­£åˆ™è¡¨è¾¾å¼
+
+    #20160107 zqd -----------------------------------------------------------------------
+    if pat1.match(text) and len(text)<70:
+        if pat1.sub('',text)[0] == ' ':
+            sort = 'firstLv'
+            #print 'the first LV length is',len(text)
+        elif  pat1.sub('',text)[0] =='.':
+            if pat2.match(text):
+                if pat2.sub('',text)[0] == ' ':
+                    sort = 'secondLv'
+                elif pat2.sub('',text)[0]=='.':
+                    if pat3.match(text):
+                        if pat3.sub('',text)[0]==' ':
+                            sort = 'thirdLv'
+                        elif pat3.sub('',text)[0]=='.':
+                            sort = 'overflow'
+                            #print '    warning: ä¸å…è®¸å‡ºç°å››çº§æ ‡é¢˜ï¼'
+                        else:
+                            sort ='thirdLv_e'
+                    else:
+                        sort='secondLv_e2'
+                        #print '    warning: äºŒçº§æ ‡é¢˜æ­£ç¡®çš„æ ‡å·æ ¼å¼ä¸ºX.Xï¼'
+                else:
+                    sort = 'secondLv_e'
+            else:
+                sort = 'body'
+        else:
+            sort = 'firstLv_e'
+    elif pat4.match(text) and len(text)<125:
+        sort = 'objectT'
+    elif pat5.match(text) and len(text)<125:
+        sort = 'tableT'
+    else :
+        sort ='body'
+#  zqd--------------------------------------------------------------------------------
+    return sort
 
 def second_locate():
     paraNum = 0
@@ -260,11 +178,16 @@ def second_locate():
     last_text = ''
     mentioned = []
     ref_num = 0
-    for paragr in _iter(xml_tree,'p'):
+    inmenu = True
+    for paragr in xml_tree.iter(tag="%s%s"%(word_schema,'p')):
         paraNum +=1
         text=get_ptext(paragr)
-        if text == '' or text == '':
-            continue
+        if cur_part == 'menu':
+            fldlist = []
+            for fldChar in _iter(paragr, "fldChar"):
+                fldlist.append(fldChar.get("%s%s" % (word_schema, "fldCharType")))
+            if 'end' in fldlist and 'begin' not in fldlist:
+                inmenu = False
         if paraNum in part.keys():
             cur_part = part[paraNum]
         if cur_part == 'body':
@@ -283,46 +206,48 @@ def second_locate():
                                 mentioned.append(node.values()[1][4:])
             if flag == 1:
                 continue
-            #------end
+        #------end
+        if text == ' ' or text == '':
+            continue
         if cur_part == 'cover':
-            if '±ÏÒµÉè¼Æ'in text:
+            if 'æ¯•ä¸šè®¾è®¡'in text:
                 cur_state = locate[paraNum] = 'cover2'
             elif  cur_state == 'cover2':
                 cur_state = locate[paraNum] = 'cover3'
                 title = text
-            elif 'Ôº'in text and'Ïµ'in text and 'Ãû³Æ'in text:
+            elif 'é™¢'in text and'ç³»'in text and 'åç§°'in text:
                 cur_state = locate[paraNum] = 'cover4'
-            elif 'Äê'in text and 'ÔÂ'in text:
+            elif 'å¹´'in text and 'æœˆ'in text:
                 cur_state = locate[paraNum] = 'cover5'
         elif cur_part == 'spine':
-            if 'ÂÛÎÄ·âÃæÊé¼¹' in text:
+            if 'è®ºæ–‡å°é¢ä¹¦è„Š' in text:
                 cur_state = locate[paraNum] = 'cover6'
             else:
-                cur_state = locate[paraNum] = 'spine1'#²»ÓÃ´¦ÀíÁË
+                cur_state = locate[paraNum] = 'spine1'#ä¸ç”¨å¤„ç†äº†
         elif cur_part == "taskbook":
             cur_state = locate[paraNum] = "taskbook"
         elif cur_part == 'statement':
-            if text == '±¾ÈËÉùÃ÷':
+            if text == 'æœ¬äººå£°æ˜':
                 cur_state = locate[paraNum] = 'statm1'
-            elif text.startswith('ÎÒÉùÃ÷'):
+            elif text.startswith('æˆ‘å£°æ˜'):
                 cur_state = locate[paraNum] = 'statm2'
-            elif '×÷Õß'in text:
+            elif 'ä½œè€…'in text:
                 cur_state = locate[paraNum] = 'statm3'
-            elif 'Ê±¼ä' in text and  'Äê'in text  and 'ÔÂ' in text:
+            elif 'æ—¶é—´' in text and  'å¹´'in text  and 'æœˆ' in text:
                 last_text = text
-            elif 'Ê±¼ä'in last_text and  'Äê' in last_text and 'ÔÂ' in last_text and title in text:
+            elif 'æ—¶é—´'in last_text and  'å¹´' in last_text and 'æœˆ' in last_text and(title in text or text in title):
                 last_text = ''
                 cur_state = locate[paraNum] = 'abstr1'
-            elif 'Ñ§' and 'Éú'in text:
+            elif 'å­¦' and 'ç”Ÿ'in text:
                 cur_state = locate[paraNum] = 'abstr2'
         elif cur_part == 'abstract':
-            if re.match(r'Õª *Òª',text):
+            if re.match(r'æ‘˜ *è¦',text):
                 cur_state = locate[paraNum] = 'abstr3'
                 last_text = text
-            elif re.match(r'Õª *Òª',last_text):
+            elif re.match(r'æ‘˜ *è¦',last_text):
                 last_text = ''
                 cur_state = locate[paraNum] = 'abstr4'
-            elif '¹Ø¼ü´Ê'in text or '¹Ø¼ü×Ö'in text:
+            elif 'å…³é”®è¯'in text or 'å…³é”®å­—'in text:
                 cur_state = locate[paraNum] = 'abstr5'
                 last_text = text
             elif cur_state == 'abstr5':
@@ -339,10 +264,10 @@ def second_locate():
                 cur_state = locate[paraNum] = 'abstr4'
                 last_text = ''
             elif (('KEY'in text or 'key' in text or "Key" in text) and ('WORD'in text or'word' in text))\
-                 or ('keyword'in text or 'Keyword'in text or'KEYWORD'in text): 
+                 or ('keyword'in text or 'Keyword'in text or'KEYWORD'in text):
                 cur_state = locate[paraNum] = 'abstr5'
         elif cur_part == 'menu':
-            if re.match(r'Ä¿ *Â¼',text)or re.compile(r'Í¼ *Ä¿ *Â¼').match(text) or re.compile(r'±í *Ä¿ *Â¼').match(text) or re.compile(r'Í¼ *±í *Ä¿ *Â¼').match(text):
+            if re.match(r'ç›® *å½•',text)or re.compile(r'å›¾ *ç›® *å½•').match(text) or re.compile(r'è¡¨ *ç›® *å½•').match(text) or re.compile(r'å›¾ *è¡¨ *ç›® *å½•').match(text):
                 cur_state = locate[paraNum] = 'menuTitle'
             elif analyse(text)  in ['firstLv','firstLv_e']:
                 cur_state = locate[paraNum] ='menuFirst'
@@ -351,45 +276,45 @@ def second_locate():
             elif analyse(text) in ['thirdLv',"thirdLv_e"]:
                 cur_state = locate[paraNum] = 'menuThird'
             else :
-                cur_state = locate[paraNum] ='menuFirst'#ÒÔºº×Ö¿ªÍ·µÄ±êÌâ¶¼ÈÏÎªÊÇÒ»¼¶±êÌâ
-            if locate[paraNum] != 'menuTitle' and not text[-1].isdigit():
+                cur_state = locate[paraNum] ='menuFirst'#ä»¥æ±‰å­—å¼€å¤´çš„æ ‡é¢˜éƒ½è®¤ä¸ºæ˜¯ä¸€çº§æ ‡é¢˜
+            if locate[paraNum] != 'menuTitle' and inmenu == False:
                 cur_state = part[paraNum] = 'body'
                 cur_part = 'body'
         elif cur_part == 'body':
-            #µÃµ½¼¶±ğ£¬ÏÈ°´¼¶±ğ×ß£¬Èç¹û¼¶±ğÎªÆÕÍ¨£¬Ôò°´ÕıÔò×ß¡£
+            #å¾—åˆ°çº§åˆ«ï¼Œå…ˆæŒ‰çº§åˆ«èµ°ï¼Œå¦‚æœçº§åˆ«ä¸ºæ™®é€šï¼Œåˆ™æŒ‰æ­£åˆ™èµ°ã€‚
             #print paraNum
             level = get_level(paragr)
             analyse_result = analyse(text)
             if analyse_result in['firstLv_e','secondLv_e','thirdLv_e']:
-                warnInfo.append('    warning: ±êÌâ±êºÅĞèÒªºÍ±êÌâÖ®¼äÓÃ¿Õ¸ñ¸ô¿ª')
+                warnInfo.append('    warning: æ ‡é¢˜æ ‡å·éœ€è¦å’Œæ ‡é¢˜ä¹‹é—´ç”¨ç©ºæ ¼éš”å¼€')
                 spaceNeeded.append(paraNum)
         #-------follow----hsy--modifies on July.13.2016
             if analyse_result is 'objectT':
                 if cur_state != 'object':
                     #print 'warning',text
-                    warnInfo.append('   warning: Í¼±êÌâÇ°Ã»ÓĞÖ±½Ó¶ÔÓ¦µÄÍ¼')
+                    warnInfo.append('   warning: å›¾æ ‡é¢˜å‰æ²¡æœ‰ç›´æ¥å¯¹åº”çš„å›¾')
             if cur_state is 'object':
                 if analyse_result != 'objectT':
                     #print 'warning',text
-                    warnInfo.append('   warning: Í¼ºóÃ»ÓĞ¶ÔÓ¦µÄÍ¼×¢¡£')
+                    warnInfo.append('   warning: å›¾åæ²¡æœ‰å¯¹åº”çš„å›¾æ³¨ã€‚')
         #------end---------------------
             if level == '0':
                 cur_state = locate[paraNum] = 'firstTitle'
                 if analyse_result != 'firstLv' or analyse_result != 'firstLv_e':
                     #print 'warning',text
-                    warnInfo.append('    warning: ±êÌâ¼¶±ğºÍ±êÌâ±êºÅ´ú±íµÄ¼¶±ğ²»Ò»ÖÂ')
+                    warnInfo.append('    warning: æ ‡é¢˜çº§åˆ«å’Œæ ‡é¢˜æ ‡å·ä»£è¡¨çš„çº§åˆ«ä¸ä¸€è‡´')
             elif level == '1':
                 cur_state = locate[paraNum] = 'secondTitle'
                 if analyse_result != 'secondLv' or analyse_result != 'secondLv_e':
                     #print 'warning',text
-                    warnInfo.append('    warning: ±êÌâ¼¶±ğºÍ±êÌâ±êºÅ´ú±íµÄ¼¶±ğ²»Ò»ÖÂ')
+                    warnInfo.append('    warning: æ ‡é¢˜çº§åˆ«å’Œæ ‡é¢˜æ ‡å·ä»£è¡¨çš„çº§åˆ«ä¸ä¸€è‡´')
             elif level == '2':
                 cur_state = locate[paraNum] = 'thirdTitle'
                 if analyse_result != 'thirdLv' or analyse_result != 'thirdLv_e':
                     #print 'warning',text
-                    warnInfo.append('    warning: ±êÌâ¼¶±ğºÍ±êÌâ±êºÅ´ú±íµÄ¼¶±ğ²»Ò»ÖÂ')
+                    warnInfo.append('    warning: æ ‡é¢˜çº§åˆ«å’Œæ ‡é¢˜æ ‡å·ä»£è¡¨çš„çº§åˆ«ä¸ä¸€è‡´')
             else:
-                if paragr.getparent().tag != '%s%s'% (word_schema,'body'): #µ±paragrµÄ¸¸½Úµã²»ÊÇbodyÊ±£¬¸ÃparaµÄÎÄ±¾²»ÊôÓÚÕıÎÄ£¨¿ÉÄÜÊÇ±í¸ñ¡¢Í¼ĞÎ»òÎÄ±¾¿òÄÚµÄÎÄ×Ö
+                if paragr.getparent().tag != '%s%s'% (word_schema,'body'): #å½“paragrçš„çˆ¶èŠ‚ç‚¹ä¸æ˜¯bodyæ—¶ï¼Œè¯¥paraçš„æ–‡æœ¬ä¸å±äºæ­£æ–‡ï¼ˆå¯èƒ½æ˜¯è¡¨æ ¼ã€å›¾å½¢æˆ–æ–‡æœ¬æ¡†å†…çš„æ–‡å­—
                     cur_state = locate[paraNum] = 'tableText'
                 elif analyse_result == 'firstLv':
                     cur_state = locate[paraNum] = 'firstTitle'
@@ -401,20 +326,20 @@ def second_locate():
                     cur_state = locate[paraNum] = 'objectTitle'
                 elif analyse_result == 'tableT':
                     cur_state = locate[paraNum] = 'tableTitle'
-                elif re.match(r'½á *ÂÛ',text):
+                elif re.match(r'ç»“ *è®º',text):
                     cur_state = locate[paraNum] = 'firstTitle'
-                elif re.match(r'ÖÂ *Ğ»',text):
+                elif re.match(r'è‡´ *è°¢',text):
                     cur_state = locate[paraNum] = 'firstTitle'
-                elif re.match(r'Ğ÷ *ÂÛ',text):
+                elif re.match(r'ç»ª *è®º',text):
                     cur_state = locate[paraNum] = 'firstTitle'
                 else:
                     cur_state = locate[paraNum] = 'body'
         elif cur_part == 'refer':
-            if text == '²Î¿¼ÎÄÏ×':
+            if text == 'å‚è€ƒæ–‡çŒ®':
                 cur_state = locate[paraNum] = 'firstTitle'
             else :
                 cur_state = locate[paraNum] = 'reference'
-                #µÃµ½²Î¿¼ÎÄÏ×µÄ×Öµä zwlĞÂÔö
+                #å¾—åˆ°å‚è€ƒæ–‡çŒ®çš„å­—å…¸ zwlæ–°å¢
                 ref_num += 1
                 islist = 0
                 listnumFmt = ''
@@ -437,9 +362,9 @@ def second_locate():
                             ref_dic[ref_num]['numId'] = get_val(node,'val')
                     listnumFmt = getformat(getabstractnumId(ref_dic[ref_num]['numId']),ref_dic[ref_num]['ilvl'])[2]
                 if not re.match('\\[[0-9]+\\]',text) and listnumFmt != '[%1]':
-                     warnInfo.append('    warning: ²Î¿¼ÎÄÏ×±ØĞëÒÔ[num]±êºÅ¿ªÍ·£¡')
+                     warnInfo.append('    warning: å‚è€ƒæ–‡çŒ®å¿…é¡»ä»¥[num]æ ‡å·å¼€å¤´ï¼')
         elif cur_part == 'appendix':
-            if text.startswith('¸½') and text.endswith('Â¼'):
+            if text.startswith('é™„') and text.endswith('å½•'):
                 cur_state = locate[paraNum] = 'firstTitle'
             else:
                 cur_state = locate[paraNum] = 'body'
@@ -448,108 +373,158 @@ def second_locate():
             reference.remove(val)
     return warnInfo
 
-#ÔÚÅĞ±ğÎÄ±¾ÒÔÊ²Ã´¿ªÍ·µÄ·½·¨ÉÏÊ¹ÓÃÁËÕıÔò±í´ïÊ½
-def analyse(text):
-    text=text.strip(' ')
-    if text.isdigit():
-        return 'body'
-    pat1 = re.compile('[0-9]+')#ÒÔÊı×Ö¿ªÍ·µÄÕıÔò±í´ïÊ½
-    pat2 = re.compile('[0-9]+\\.[0-9]')#ÒÔX.X¿ªÍ·µÄÕıÔò±í´ïÊ½
-    pat3 = re.compile('[0-9]+\\.[0-9]\\.[0-9]')#ÒÔX.X.X¿ªÍ·µÄÕıÔò±í´ïÊ½
-    pat4 = re.compile('Í¼(\s)*[0-9]+(\\.|-)[0-9]')#Í¼±êÌâµÄÕıÔò±í´ïÊ½
-    pat5 = re.compile('±í(\s)*[0-9]+(\\.|-)[0-9]')#±í±êÌâµÄÕıÔò±í´ïÊ½
+# -----------------------------
+# ä»¥ä¸‹5ä¸ªå‡½æ•°ç”¨æ¥ è·å–æ–‡æœ¬å¯¹åº”çš„æ ¼å¼ä¿¡æ¯
+# åˆå§‹åŒ–ä¸€ä¸ªæ ¼å¼å­—å…¸ï¼Œå­—æ®µå€¼çš„ç±»å‹ä¸ºæ–¹ä¾¿å¤„ç†å‡ä¸ºstrï¼Œå€¼çš„å®šä¹‰å’ŒèŒƒå›´å¯ä»¥å‚è€ƒæ–‡æ¡£
+def init_fd(d):
+    d['fontCN'] = 'å®‹ä½“'
+    d['fontEN'] = 'Times New Roman'
+    d['fontSize'] = '21'  # å› ä¸ºwordé‡Œé»˜è®¤æ˜¯21
+    d['paraAlign'] = 'both'
+    d['fontShape'] = '0'
+    d['paraSpace'] = '240'
+    d['paraIsIntent'] = "0"
+    d['paraIsIntent1'] = '0'
+    d['paraFrontSpace'] = '0'
+    d['paraAfterSpace'] = '0'
+    d['paraGrade'] = '0'
+    d['leftChars'] = '0'
+    d['left'] = '0'
+    return d
 
-    #20160107 zqd -----------------------------------------------------------------------
-    if pat1.match(text) and len(text)<70:
-        if  pat1.sub('',text)[0] == ' ':
-            sort = 'firstLv'
-            #print 'the first LV length is',len(text)
-        elif  pat1.sub('',text)[0] =='.':
-            if pat2.match(text):
-                if pat2.sub('',text)[0] == ' ':
-                    sort = 'secondLv'
-                elif pat2.sub('',text)[0]=='.':
-                    if pat3.match(text):
-                        if pat3.sub('',text)[0]==' ':
-                            sort = 'thirdLv'
-                        elif pat3.sub('',text)[0]=='.':
-                            sort = 'overflow'
-                            #print '    warning: ²»ÔÊĞí³öÏÖËÄ¼¶±êÌâ£¡'
-                        else:
-                            sort ='thirdLv_e'
-                    else:
-                        sort='secondLv_e2'
-                        #print '    warning: ¶ş¼¶±êÌâÕıÈ·µÄ±êºÅ¸ñÊ½ÎªX.X£¡'
+def has_key(node, attribute):
+    return '%s%s' % (word_schema, attribute) in node.keys()
+
+def get_val(node, attribute):
+    if has_key(node, attribute):
+        return node.get('%s%s' % (word_schema, attribute))
+    else:
+        return 'æœªè·å–å±æ€§å€¼'
+
+# è·å–çš„æ ¼å¼ä¿¡æ¯èµ‹ç»™å½“å‰èŠ‚ç‚¹çš„æ ¼å¼å­—å…¸
+def assign_fd(node, d):
+    for detail in node.iter(tag=etree.Element):
+        # ------20160314 zqd----------------------------------
+        if _check_element_is(detail, 'rFonts'):
+            if has_key(detail, 'eastAsia'):  # æœ‰æ­¤å±æ€§
+                d['fontCN'] = get_val(detail, 'eastAsia')
+            if has_key(detail, 'ascii'):
+                d['fontEN'] = get_val(detail, 'ascii')
+                # --------------------------------------------
+        elif _check_element_is(detail, 'sz'):
+            d['fontSize'] = get_val(detail, 'val')
+        elif _check_element_is(detail, 'jc'):
+            d['paraAlign'] = get_val(detail, 'val')
+        elif _check_element_is(detail, 'b'):
+            if has_key(detail, 'val'):
+                if get_val(detail, 'val') != '0' and get_val(detail, 'val') != 'false':
+                    d['fontShape'] = '1'  # è¡¨ç¤ºbold
                 else:
-                    sort = 'secondLv_e'
+                    d['fontShape'] = '0'
             else:
-                sort = 'body'
-        else:
-            sort = 'firstLv_e'
-    elif pat4.match(text) and len(text)<125:
-        sort = 'objectT'
-    elif pat5.match(text) and len(text)<125:
-        sort = 'tableT'
-    else :
-        sort ='body'
-#  zqd--------------------------------------------------------------------------------
-    return sort
+                d['fontShape'] = '1'  # è¡¨ç¤ºbold
+        elif _check_element_is(detail, 'spacing'):
+            if has_key(detail, 'line'):
+                d['paraSpace'] = get_val(detail, 'line')
+            if has_key(detail, 'before'):
+                d['paraFrontSpace'] = get_val(detail, 'before')
+            if has_key(detail, 'after'):
+                d['paraAfterSpace'] = get_val(detail, 'after')
+                # --------20160313 zqd----------------------------------------
+        elif _check_element_is(detail, 'ind'):
+            if has_key(detail, 'left'):
+                d['left'] = get_val(detail, "left")
+            if has_key(detail, "leftChars"):
+                d['leftChars'] = get_val(detail, 'leftChars')
+            if has_key(detail, 'firstLine'):
+                d['paraIsIntent'] = get_val(detail, 'firstLine')
+            if has_key(detail, 'firstLineChars'):
+                d['paraIsIntent1'] = get_val(detail, 'firstLineChars')
+                # -------------------------------------------------
+        elif _check_element_is(detail, 'outlineLvl'):
+            d['paraGrade'] = get_val(detail, 'val')
+    return d
 
-#¶ÁÈ¡¹æÔò½Ó¿Ú
-def read_rules(filename):
-    f = open(filename,'r')
-    #¸Ã×ÖµäÖ÷ÒªÊÇÓÉÓÚÓëÇ°¶Ë½Ó¿Ú¶¨Òå²»Ò»ÖÂÎªÁË±ÜÃâ´óÆ¬ĞŞ¸Ä´úÂë¶ø¶¨ÒåµÄ(ÒÑ¸üĞÂÒ»ÖÂ
-    keyNameDc={'·âÃæ_µ¥Î»´úÂë':'cover1',
-               '·âÃæ_±ÏÒµÉè¼Æ':'cover2',
-               '·âÃæ_ÂÛÎÄ±êÌâ':'cover3',
-               '·âÃæ_¸öÈËĞÅÏ¢':'cover4',
-               '·âÃæ_ÈÕÆÚ':'cover5',
-               '·âÃæ_Êé¼¹':'cover6',
-               '¸öÈËÉùÃ÷_±êÌâ':'statm1',
-               '¸öÈËÉùÃ÷_ÕıÎÄ':'statm2',
-               '¸öÈËÉùÃ÷_Ç©Ãû':'statm3',
-               'ÕªÒª_ÂÛÎÄÌâÄ¿':'abstr1',
-               'ÕªÒª_Ñ§Éú¼°½ÌÊ¦ĞÕÃû':'abstr2',
-               'ÕªÒª_±êÌâ':'abstr3',
-               'ÕªÒª_ÄÚÈİ':'abstr4',
-               'ÕªÒª_¹Ø¼ü´Ê':'abstr5',
-               'ÕªÒª_¹Ø¼ü´ÊÄÚÈİ':'abstr6',
-               'Ä¿Â¼_±êÌâ':'menuTitle',
-               'Ä¿Â¼_Ò»¼¶±êÌâ':'menuFirst',
-               'Ä¿Â¼_¶ş¼¶±êÌâ':'menuSecond',
-               'Ä¿Â¼_Èı¼¶±êÌâ':'menuThird',
-               'ÕıÎÄ_Ò»¼¶±êÌâ':'firstTitle',
-               'ÕıÎÄ_¶ş¼¶±êÌâ':'secondTitle',
-               'ÕıÎÄ_Èı¼¶±êÌâ':'thirdTitle',
-               'ÕıÎÄ_¶ÎÂä':'body',
-               'ÖÂĞ»_±êÌâ':'unknown',#
-               'ÖÂĞ»_ÄÚÈİ':'unknown',#
-               '¸½Â¼_±êÌâ':'extentTitle',
-               '¸½Â¼_ÄÚÈİ':'extentContent',
-               'Í¼±êÌâ':'objectTitle',
-               '±í±êÌâ':'tableTitle',
-               '²Î¿¼ÎÄÏ×_ÌõÄ¿':'reference'
-               }
-    
-    rules_dct={}        
-    for line in f:
-        if line.startswith('{'):
-            group=line[1:-3].split(',')
-            for factor in group:
-                _key = factor[:factor.index(':')]
-                _val = factor[factor.index(':')+1:]
-                if _key == 'key':
-                    rule_dkey = _val
-                    rules_dct.setdefault(_val,{})
-                if _key!= 'key':
-                    rules_dct[rule_dkey].setdefault(_key,_val)
-    f.close()
-    return rules_dct
+def islist(paragr):
+    for node in paragr.iter(tag="%s%s"%(word_schema,"numPr")):
+        return True
+    node = paragr
+    flag = False
+    for pstyle in _iter(node, "pStyle"):
+        flag = True
+        styleId = get_val(pstyle, 'val')
+        node = get_style_node(styleId)
+        break
+    while flag:
+        flag = False
+        for node in node.iter(tag="%s%s" % (word_schema, "numPr")):
+            return True
+        for baseon in _iter(node, "baseOn"):
+            flag = True
+            styleId = get_val(baseon, "val")
+            node = get_style_node(styleId)
+    return False
 
-#¼ì²é¸ñÊ½²¢Êä³ö½á¹û
+def get_style_node(styleID):
+    for style in _iter(style_tree, 'style'):
+        if get_val(style, 'styleId') == styleID:  # get_valæ˜¯å±æ€§
+            return style
+
+def get_default_styleId():
+    for style in _iter(style_tree, 'style'):
+        if get_val(style, "type") == "paragraph":
+            for name in _iter(style, "name"):
+                if get_val(name, "val") == "Normal":
+                    return get_val(style, "styleId")
+
+# ----20160314 zqd------------
+def get_style_format(styleID, d):
+    for style in _iter(style_tree, 'style'):
+        if get_val(style, 'styleId') == styleID:  # get_valæ˜¯å±æ€§
+            for detail in style.iter(tag=etree.Element):
+                if _check_element_is(detail, 'basedOn'):
+                    styleID1 = get_val(detail, 'val')
+                    get_style_format(styleID1, d)
+                if _check_element_is(detail, 'pPr'):
+                    assign_fd(detail, d)
+
+
+def get_style_rpr(styleID, d):
+    for style in _iter(style_tree, 'style'):
+        if get_val(style, 'styleId') == styleID:  # get_valæ˜¯å±æ€§
+            for detail in style.iter(tag=etree.Element):
+                if _check_element_is(detail, 'basedOn'):
+                    styleID1 = get_val(detail, 'val')
+                    get_style_rpr(styleID1, d)
+                if _check_element_is(detail, "rPr"):
+                    assign_fd(detail, d)
+
+#è·å–æ ¼å¼
+def get_format(node,d):
+    init_fd(d)
+    defaultId = get_default_styleId()
+    get_style_format(defaultId,d)
+    #å…³äºæˆ‘çš„2013ç‰ˆçš„wordçš„pPrä¸‹çš„rPrä¸èµ·ä½œç”¨
+    for pPr in _iter(node,'pPr'):
+        for pstyle in _iter(pPr,'pStyle'):
+            styleID = get_val(pstyle,'val')
+            get_style_format(styleID,d)
+        assign_fd(pPr,d)
+    d['fontCN']='å®‹ä½“'
+    d['fontEN']='Times New Roman'
+    d['fontSize']='21'
+    d['fontShape']='0'
+    get_style_rpr(defaultId,d)
+    for pPr in _iter(node,'pPr'):
+        for pstyle in _iter(pPr,'pStyle'):
+            styleID = get_val(pstyle,'val')
+            get_style_rpr(styleID,d)
+    return d
+
+#æ£€æŸ¥æ ¼å¼å¹¶è¾“å‡ºç»“æœ
 def check_out(rule,to_check,locate,paraNum,paragr):
     errorInfo = []
-    #Õâ¸ö×ÖµäµÄ¶¨ÒåÖ÷ÒªÊÇÓÉÓÚÇ°Ì¨ÄÇ¸öÍ¬Ñ§¹æÔò×Ö¶ÎºÍ´íÎóÀàĞÍ×Ö¶ÎµÄÃû³Æ²»Ò»ÖÂ£¬Éñ·³
+    #è¿™ä¸ªå­—å…¸çš„å®šä¹‰ä¸»è¦æ˜¯ç”±äºå‰å°é‚£ä¸ªåŒå­¦è§„åˆ™å­—æ®µå’Œé”™è¯¯ç±»å‹å­—æ®µçš„åç§°ä¸ä¸€è‡´ï¼Œç¥çƒ¦
     errorTypeName={'fontCN':'font',
                    'fontEN':'font',
                    'fontSize':'fontsize',
@@ -561,20 +536,20 @@ def check_out(rule,to_check,locate,paraNum,paragr):
                    'paraAfterSpace':'gradeAfterSpace',
                    'paraIsIntent':'FLind'
                    }
-    errorTypeDescrip = {'fontCN':'ÖĞÎÄ×ÖÌå',
-                   'fontEN':'Ó¢ÎÄ×ÖÌå',
-                   'fontSize':'×ÖºÅ',
-                   'fontShape':'×ÖĞÎ',
-                   'paraAlign':'¶ÔÆë·½Ê½',
-                   'paraGrade':"ÎÄ±¾¼¶±ğ",
-                   'paraSpace':'ĞĞ¼ä¾à',
-                   'paraFrontSpace':'¶ÎÇ°¼ä¾à',
-                   'paraAfterSpace':'¶Îºó¼ä¾à',
-                   'paraIsIntent':'Ê×ĞĞËõ½ø'
+    errorTypeDescrip = {'fontCN':'ä¸­æ–‡å­—ä½“',
+                   'fontEN':'è‹±æ–‡å­—ä½“',
+                   'fontSize':'å­—å·',
+                   'fontShape':'å­—å½¢',
+                   'paraAlign':'å¯¹é½æ–¹å¼',
+                   'paraGrade':"æ–‡æœ¬çº§åˆ«",
+                   'paraSpace':'è¡Œé—´è·',
+                   'paraFrontSpace':'æ®µå‰é—´è·',
+                   'paraAfterSpace':'æ®µåé—´è·',
+                   'paraIsIntent':'é¦–è¡Œç¼©è¿›'
                       }
 
     position = ['fontCN','fontEN','fontSize','fontShape','paraGrade','paraAlign','paraSpace','paraFrontSpace','paraAfterSpace','paraIsIntent']
-    #Õâ¸ö×ÖµäµÄ¶¨ÒåÊÇÎªÁË±ÜÃâ¶ÔÃ¿¸öpara¶¼°Ñ¹æÔò×ÖµäÀïÊ®¸ö×Ö¶Î¼ì²éÒ»±é£¬¸ù¾İparaµÄÎ»ÖÃÓĞÑ¡ÔñÓĞÕë¶ÔĞÔµÄ¼ì²é
+    #è¿™ä¸ªå­—å…¸çš„å®šä¹‰æ˜¯ä¸ºäº†é¿å…å¯¹æ¯ä¸ªparaéƒ½æŠŠè§„åˆ™å­—å…¸é‡Œåä¸ªå­—æ®µæ£€æŸ¥ä¸€éï¼Œæ ¹æ®paraçš„ä½ç½®æœ‰é€‰æ‹©æœ‰é’ˆå¯¹æ€§çš„æ£€æŸ¥
     checkItemDct={'cover1':['fontCN','fontEN','fontSize','fontShape'],
                   'cover2':['fontCN','fontSize','paraAlign','paraIsIntent'],
                   'cover3':['fontCN','fontSize','paraAlign','paraIsIntent'],
@@ -606,65 +581,62 @@ def check_out(rule,to_check,locate,paraNum,paragr):
                   'objectTitle':['fontCN','fontEN','fontSize','fontShape','paraGrade','paraAlign','paraIsIntent'],
                   'tableTitle':['fontCN','fontEN','fontSize','fontShape','paraGrade','paraAlign','paraIsIntent'],
                   'reference':position}
-    islist = 0
-    for numPr in _iter(paragr,"numPr"):
-        islist = 1
     if locate in checkItemDct.keys():
-        #¹Ø¼ü´ÊÕâÀï±È½ÏÌØÊâ£¬ÒªÉîÈëparaÄÚ²¿·ÖÎörunµÄrprÀ´¿´¹Ø¼ü´ÊÄÚÈİµÄ¸ñÊ½
+        #å…³é”®è¯è¿™é‡Œæ¯”è¾ƒç‰¹æ®Šï¼Œè¦æ·±å…¥paraå†…éƒ¨åˆ†ærunçš„rpræ¥çœ‹å…³é”®è¯å†…å®¹çš„æ ¼å¼
         if locate == 'abstr5':
             for key in ['paraGrade','paraAlign','paraSpace','paraFrontSpace','paraAfterSpace','paraIsIntent']:
-                if key == 'paraIsIntent':#¶ÔÓÚËõ½ø£¬ÌØ±ğ´¦Àí
-                    if to_check['leftChars'] != 'Î´»ñÈ¡ÊôĞÔÖµ' and to_check['leftChars'] != '0':
+                if key == 'paraIsIntent':#å¯¹äºç¼©è¿›ï¼Œç‰¹åˆ«å¤„ç†
+                    if to_check['leftChars'] != 'æœªè·å–å±æ€§å€¼' and to_check['leftChars'] != '0':
                         rp1.write(str(paraNum) + '_' + locate + '_' + 'error_paraleftChars_0\n')
-                        rp.write('    '+ to_check['leftChars'] + "¶ÎÂäÓĞ×ó²àËõ½ø\n")
+                        rp.write('    '+ to_check['leftChars'] + "æ®µè½æœ‰å·¦ä¾§ç¼©è¿›\n")
                         if paragr.getparent().tag != "%s%s" % (word_schema, "sdtContent"):
-                            comment_txt.write("¶ÎÂäËõ½øÓĞ×ó²àËõ½ø\n")
+                            comment_txt.write("æ®µè½ç¼©è¿›æœ‰å·¦ä¾§ç¼©è¿›\n")
                         errorInfo.append('\'type\':\'' + errorTypeName[key] + '\',\'correct\':\'0\'')
-                    elif to_check['left'] != 'Î´»ñÈ¡ÊôĞÔÖµ' and to_check['left'] != '0':
+                    elif to_check['left'] != 'æœªè·å–å±æ€§å€¼' and to_check['left'] != '0':
                         rp1.write(str(paraNum) + '_' + locate + '_' + 'error_paraleft_0\n')
-                        rp.write('    '+ to_check['left'] + "¶ÎÂäÓĞ×ó²àËõ½ø\n")
+                        rp.write('    '+ to_check['left'] + "æ®µè½æœ‰å·¦ä¾§ç¼©è¿›\n")
                         if paragr.getparent().tag != "%s%s" % (word_schema, "sdtContent"):
-                            comment_txt.write("¶ÎÂäËõ½øÓĞ×ó²àËõ½ø\n")
+                            comment_txt.write("æ®µè½ç¼©è¿›æœ‰å·¦ä¾§ç¼©è¿›\n")
                         errorInfo.append('\'type\':\'' + errorTypeName[key] + '\',\'correct\':\'0\'')
-                    if to_check['paraIsIntent1'] != 'Î´»ñÈ¡ÊôĞÔÖµ' and to_check['paraIsIntent1'] != '0':
+                    if to_check['paraIsIntent1'] != 'æœªè·å–å±æ€§å€¼' and to_check['paraIsIntent1'] != '0':
                         if to_check['paraIsIntent1'] != '200' and rule['paraIsIntent'] == '1':
                             rp1.write(str(paraNum)+'_'+locate+'_'+'error_paraIsIntent1_200\n')
-                            rp.write('    '+ to_check['paraIsIntent1']+"¶ÎÂäÊ×ĞĞËõ½øÓĞÎó\n")
+                            rp.write('    '+ to_check['paraIsIntent1']+"æ®µè½é¦–è¡Œç¼©è¿›æœ‰è¯¯\n")
                             if paragr.getparent().tag != "%s%s"%(word_schema,"sdtContent"):
-                                comment_txt.write("¶ÎÂäÊ×ĞĞËõ½øÓĞÎó\n")
+                                comment_txt.write("æ®µè½é¦–è¡Œç¼©è¿›æœ‰è¯¯\n")
                             errorInfo.append('\'type\':\'' + errorTypeName[key] + '\',\'correct\':\'200\'')
                         elif rule['paraIsIntent'] == '0':
                             rp1.write(str(paraNum)+'_'+locate+'_'+'error_paraIsIntent1_0\n')
-                            rp.write('    '+ to_check['paraIsIntent1']+"¶ÎÂäËõ½øÓĞÎó\n")
+                            rp.write('    '+ to_check['paraIsIntent1']+"æ®µè½ç¼©è¿›æœ‰è¯¯\n")
                             if paragr.getparent().tag != "%s%s"%(word_schema,"sdtContent"):
-                                comment_txt.write("¶ÎÂäÊ×ĞĞËõ½øÓĞÎó\n")
+                                comment_txt.write("æ®µè½é¦–è¡Œç¼©è¿›æœ‰è¯¯\n")
                             errorInfo.append('\'type\':\'' + errorTypeName[key] + '\',\'correct\':\'0\'')
                     else:
                         if int(to_check['paraIsIntent']) > 0 and rule['paraIsIntent'] is '0':
                             rp1.write(str(paraNum)+'_'+locate+'_'+'error_paraIsIntent_'+str(20*int(to_check['fontSize'])*int(rule[key]))+'\n')
-                            rp.write('    '+ to_check['paraIsIntent']+"¶ÎÂäËõ½øÊ×ĞĞÓĞÎó\n")
+                            rp.write('    '+ to_check['paraIsIntent']+"æ®µè½ç¼©è¿›é¦–è¡Œæœ‰è¯¯\n")
                             if paragr.getparent().tag != "%s%s"%(word_schema,"sdtContent"):
-                                comment_txt.write("¶ÎÂäÊ×ĞĞËõ½øÓĞÎó\n")
+                                comment_txt.write("æ®µè½é¦–è¡Œç¼©è¿›æœ‰è¯¯\n")
                             errorInfo.append('\'type\':\'' + errorTypeName[key] + '\',\'correct\':\'0\'')
-                        elif int(to_check['paraIsIntent']) < 100 and rule[key] == '1':#ÕâÀï×öÒ»¸ö´ÖÂÔµÄÉè¶¨£¬ÒòÎªÒªÊÇ°´ÕÕÉÏÃæ×¢ÊÍµÄÒ»ĞĞÀ´Ö´ĞĞ£¬´íÎóÂÊÌ«¸ßÁË
+                        elif int(to_check['paraIsIntent']) < 100 and rule[key] == '1':#è¿™é‡Œåšä¸€ä¸ªç²—ç•¥çš„è®¾å®šï¼Œå› ä¸ºè¦æ˜¯æŒ‰ç…§ä¸Šé¢æ³¨é‡Šçš„ä¸€è¡Œæ¥æ‰§è¡Œï¼Œé”™è¯¯ç‡å¤ªé«˜äº†
                             rp1.write(str(paraNum)+'_'+locate+'_'+'error_paraIsIntent_'+str(20*int(to_check['fontSize'])*int(rule[key]))+'\n')
-                            rp.write('    '+ to_check['paraIsIntent']+"¶ÎÂäÊ×ĞĞËõ½øÓĞÎó\n")
+                            rp.write('    '+ to_check['paraIsIntent']+"æ®µè½é¦–è¡Œç¼©è¿›æœ‰è¯¯\n")
                             if paragr.getparent().tag != "%s%s"%(word_schema,"sdtContent"):
-                                comment_txt.write("¶ÎÂäÊ×ĞĞËõ½øÓĞÎó\n")
+                                comment_txt.write("æ®µè½é¦–è¡Œç¼©è¿›æœ‰è¯¯\n")
                             errorInfo.append('\'type\':\'' + errorTypeName[key] + '\',\'correct\':\'200\'')
                     continue
                 else:
                     if to_check[key] != rule[key]:
-                        rp.write('    '+errorTypeDescrip[key]+'ÊÇ'+to_check[key]+'  ÕıÈ·Ó¦Îª£º'+rule[key]+'\n')
+                        rp.write('    '+errorTypeDescrip[key]+'æ˜¯'+to_check[key]+'  æ­£ç¡®åº”ä¸ºï¼š'+rule[key]+'\n')
                         if paragr.getparent().tag != "%s%s"%(word_schema,"sdtContent"):
-                            comment_txt.write(errorTypeDescrip[key]+'ÊÇ'+ to_check[key] + '  ÕıÈ·Ó¦Îª£º'+rule[key]+'\n')
+                            comment_txt.write(errorTypeDescrip[key]+'æ˜¯'+ to_check[key] + '  æ­£ç¡®åº”ä¸ºï¼š'+rule[key]+'\n')
                         errorInfo.append('\'type\':\''+errorTypeName[key]+'\',\'correct\':\''+rule[key]+'\'')
                         rp1.write(str(paraNum)+'_'+locate+'_error_'+ key+'_'+ rule[key]+'\n')
-            if ':' not in ptext and '£º' not in ptext:
-                rp.write('    '+ 'warning: ¹Ø¼ü´ÊºóÃæÃ»ÓĞÃ°ºÅ£¡\n')
-                comment_txt.write('warning: ¹Ø¼ü´ÊºóÃæÃ»ÓĞÃ°ºÅ\n')
-                errorInfo.append('\'type\':\'' + "¹Ø¼ü´ÊºóÃæÃ»ÓĞÃ°ºÅ" + '\',\'correct\':\''+ '\'')
-            pat = re.compile("¹Ø|¼ü|´Ê|£º|:| | ")
+            if ':' not in ptext and 'ï¼š' not in ptext:
+                rp.write('    '+ 'warning: å…³é”®è¯åé¢æ²¡æœ‰å†’å·ï¼\n')
+                comment_txt.write('warning: å…³é”®è¯åé¢æ²¡æœ‰å†’å·\n')
+                errorInfo.append('\'type\':\'' + "å…³é”®è¯åé¢æ²¡æœ‰å†’å·" + '\',\'correct\':\''+ '\'')
+            pat = re.compile("å…³|é”®|è¯|ï¼š|:| | ")
             nextT = False
             fCN = True
             fEN = True
@@ -675,26 +647,26 @@ def check_out(rule,to_check,locate,paraNum,paragr):
                 if locate == "abstr5":
                     rtext = ''
                     for t in _iter(r, 't'):
-                        rtext += t.text.encode(Unicode_bt, 'ignore')
+                        rtext += t.text
                     if (pat.sub("", rtext) != "" and not (('KEY'in rtext or 'key' in rtext or "Key" in rtext or 'WORD'in rtext or'word' in rtext)\
                  or 'keyword'in rtext or 'Keyword'in rtext or'KEYWORD'in rtext)) or nextT :
                         locate = 'abstr6'
                         rule = rules_dct[locate]
-                    if ":" in rtext or "£º" in rtext:
+                    if ":" in rtext or "ï¼š" in rtext:
                         nextT = True
                 if ftheme and containThemeFonts(r):
                     ftheme = False
                     rp1.write(str(paraNum) + '_' + locate + '_' + 'error_fontTheme_0\n')
-                    rp.write("    µ±Ç°¶ÎÂä²¿·ÖÎªÖ÷Ìâ×ÖÌå\n")
-                    comment_txt.write("µ±Ç°¶ÎÂä²¿·ÖÎªÖ÷Ìâ×ÖÌå\n")
-                    errorInfo.append("µ±Ç°¶ÎÂä²¿·ÖÎªÖ÷Ìâ×ÖÌå")
+                    rp.write("    å½“å‰æ®µè½éƒ¨åˆ†ä¸ºä¸»é¢˜å­—ä½“\n")
+                    comment_txt.write("å½“å‰æ®µè½éƒ¨åˆ†ä¸ºä¸»é¢˜å­—ä½“\n")
+                    errorInfo.append("å½“å‰æ®µè½éƒ¨åˆ†ä¸ºä¸»é¢˜å­—ä½“")
                 if fCN:
                     eastAsia = ""
                     flag = True
                     for rfonts in _iter(r,"rFonts"):
                         flag = False
                         if has_key(rfonts,"eastAsia"):
-                            eastAsia = get_val(rfonts,"eastAsia").encode(Unicode_bt,"ignore")
+                            eastAsia = get_val(rfonts,"eastAsia")
                         else:
                             eastAsia = to_check["fontCN"]
                     if flag:
@@ -702,16 +674,16 @@ def check_out(rule,to_check,locate,paraNum,paragr):
                     if eastAsia != rule["fontCN"]:
                         fCN = False
                         rp1.write(str(paraNum)+'_'+locate+'_'+'error_fontCN_0\n')
-                        rp.write("    µ±Ç°¶ÎÂä²¿·ÖÖĞÎÄ×ÖÌåÓĞ´í\n")
-                        comment_txt.write("µ±Ç°¶ÎÂä²¿·ÖÖĞÎÄ×ÖÌåÓĞÎó\n")
-                        errorInfo.append("µ±Ç°¶ÎÂä²¿·ÖÖĞÎÄ×ÖÌåÓĞÎó")
+                        rp.write("    å½“å‰æ®µè½éƒ¨åˆ†ä¸­æ–‡å­—ä½“æœ‰é”™\n")
+                        comment_txt.write("å½“å‰æ®µè½éƒ¨åˆ†ä¸­æ–‡å­—ä½“æœ‰è¯¯\n")
+                        errorInfo.append("å½“å‰æ®µè½éƒ¨åˆ†ä¸­æ–‡å­—ä½“æœ‰è¯¯")
                 if fEN:
                     ascii = ""
                     flag = True
                     for rfonts in _iter(r,"rFonts"):
                         flag = False
                         if has_key(rfonts,"ascii"):
-                            ascii = get_val(rfonts,"ascii").encode(Unicode_bt,"ignore")
+                            ascii = get_val(rfonts,"ascii")
                         else:
                             ascii = to_check["fontEN"]
                     if flag:
@@ -719,9 +691,9 @@ def check_out(rule,to_check,locate,paraNum,paragr):
                     if ascii != rule["fontEN"]:
                         fEN = False
                         rp1.write(str(paraNum)+'_'+locate+'_'+'error_fontEN_0\n')
-                        rp.write("    µ±Ç°¶ÎÂä²¿·ÖÓ¢ÎÄ×ÖÌåÓĞ´í\n")
-                        comment_txt.write("µ±Ç°¶ÎÂä²¿·ÖÓ¢ÎÄ×ÖÌåÓĞÎó\n")
-                        errorInfo.append("µ±Ç°¶ÎÂä²¿·ÖÓ¢ÎÄ×ÖÌåÓĞÎó")
+                        rp.write("    å½“å‰æ®µè½éƒ¨åˆ†è‹±æ–‡å­—ä½“æœ‰é”™\n")
+                        comment_txt.write("å½“å‰æ®µè½éƒ¨åˆ†è‹±æ–‡å­—ä½“æœ‰è¯¯\n")
+                        errorInfo.append("å½“å‰æ®µè½éƒ¨åˆ†è‹±æ–‡å­—ä½“æœ‰è¯¯")
                 if fShape:
                     rfshape = ""
                     flag = True
@@ -736,9 +708,9 @@ def check_out(rule,to_check,locate,paraNum,paragr):
                     if rfshape != rule["fontShape"]:
                         fShape = False
                         rp1.write(str(paraNum) + '_' + locate + '_' + 'error_fontShape_0\n')
-                        rp.write("    µ±Ç°¶ÎÂä²¿·Ö×ÖÌå¼Ó´ÖÓĞÎó\n")
-                        comment_txt.write("µ±Ç°¶ÎÂä²¿·Ö×ÖÌå¼Ó´ÖÓĞÎó\n")
-                        errorInfo.append("µ±Ç°¶ÎÂä²¿·Ö×ÖÌå¼Ó´ÖÓĞÎó")
+                        rp.write("    å½“å‰æ®µè½éƒ¨åˆ†å­—ä½“åŠ ç²—æœ‰è¯¯\n")
+                        comment_txt.write("å½“å‰æ®µè½éƒ¨åˆ†å­—ä½“åŠ ç²—æœ‰è¯¯\n")
+                        errorInfo.append("å½“å‰æ®µè½éƒ¨åˆ†å­—ä½“åŠ ç²—æœ‰è¯¯")
                 if fSize:
                     rfsize = ""
                     flag = True
@@ -750,53 +722,59 @@ def check_out(rule,to_check,locate,paraNum,paragr):
                     if rfsize != rule["fontSize"]:
                         fSize = False
                         rp1.write(str(paraNum) + '_' + locate + '_' + 'error_fontSize_0\n')
-                        rp.write("    µ±Ç°¶ÎÂä²¿·ÖÓ¢ÎÄ×ÖÌå´óĞ¡ÓĞÎó\n")
-                        comment_txt.write("µ±Ç°¶ÎÂä²¿·ÖÓ¢ÎÄ×ÖÌå´óĞ¡ÓĞÎó\n")
-                        errorInfo.append("µ±Ç°¶ÎÂä²¿·ÖÓ¢ÎÄ×ÖÌå´óĞ¡ÓĞÎó")
+                        rp.write("    å½“å‰æ®µè½éƒ¨åˆ†è‹±æ–‡å­—ä½“å¤§å°æœ‰è¯¯\n")
+                        comment_txt.write("å½“å‰æ®µè½éƒ¨åˆ†è‹±æ–‡å­—ä½“å¤§å°æœ‰è¯¯\n")
+                        errorInfo.append("å½“å‰æ®µè½éƒ¨åˆ†è‹±æ–‡å­—ä½“å¤§å°æœ‰è¯¯")
         else:
             for key in checkItemDct[locate]:
-                if key == 'paraIsIntent':#¶ÔÓÚËõ½ø£¬ÌØ±ğ´¦Àí
-                    if islist == 0:
-                        if to_check['leftChars']!='Î´»ñÈ¡ÊôĞÔÖµ' and to_check['leftChars']!='0':
-                            rp1.write(str(paraNum) + '_' + locate + '_' + 'error_paraleftChars_0\n')
-                            rp.write('    '+ to_check['leftChars'] + "¶ÎÂäÓĞ×ó²àËõ½ø\n")
-                            if paragr.getparent().tag != "%s%s" % (word_schema, "sdtContent"):
-                                comment_txt.write("¶ÎÂäËõ½øÓĞ×ó²àËõ½ø\n")
-                            errorInfo.append("¶ÎÂä×ó²àËõ½øÓĞÎó")
-                        elif to_check['left'] != 'Î´»ñÈ¡ÊôĞÔÖµ' and to_check['left'] != '0':
-                            rp1.write(str(paraNum) + '_' + locate + '_' + 'error_paraleft_0\n')
-                            rp.write('    '+ to_check['left'] + "¶ÎÂäÓĞ×ó²àËõ½ø\n")
-                            if paragr.getparent().tag != "%s%s" % (word_schema, "sdtContent"):
-                                comment_txt.write("¶ÎÂäËõ½øÓĞ×ó²àËõ½ø\n")
-                            errorInfo.append("¶ÎÂä×ó²àËõ½øÓĞÎó")
-                        if to_check['paraIsIntent1'] != 'Î´»ñÈ¡ÊôĞÔÖµ' and to_check['paraIsIntent1'] != '0':
-                            if to_check['paraIsIntent1'] != '200' and rule['paraIsIntent'] == '1':
-                                rp1.write(str(paraNum)+'_'+locate+'_'+'error_paraIsIntent1_200\n')
-                                rp.write('    '+ to_check['paraIsIntent1']+"¶ÎÂäÊ×ĞĞËõ½øÓĞÎó\n")
-                                if paragr.getparent().tag != "%s%s"%(word_schema,"sdtContent"):
-                                    comment_txt.write("¶ÎÂäÊ×ĞĞËõ½øÓĞÎó\n")
-                                errorInfo.append("¶ÎÂäÊ×ĞĞËõ½øÓĞÎó")
-                            elif rule['paraIsIntent'] == '0':
-                                rp1.write(str(paraNum)+'_'+locate+'_'+'error_paraIsIntent1_0\n')
-                                rp.write('    '+ to_check['paraIsIntent1']+"¶ÎÂäÊ×ĞĞËõ½øÓĞÎó\n")
-                                if paragr.getparent().tag != "%s%s"%(word_schema,"sdtContent"):
-                                    comment_txt.write("¶ÎÂäÊ×ĞĞËõ½øÓĞÎó\n")
-                                errorInfo.append("¶ÎÂäÊ×ĞĞËõ½øÓĞÎó")
-                        else:
-                            #if to_check['paraIsIntent'] != str(int(rule['paraIsIntent'])*int(rule[key])*20):
-                            if int(to_check['paraIsIntent']) > 0 and rule['paraIsIntent'] is '0':
-                                rp1.write(str(paraNum)+'_'+locate+'_'+'error_paraIsIntent_'+str(20*int(to_check['fontSize'])*int(rule[key]))+'\n')
-                                rp.write('    '+ to_check['paraIsIntent']+"¶ÎÂäÊ×ĞĞËõ½øÓĞÎó\n")
-                                if paragr.getparent().tag != "%s%s"%(word_schema,"sdtContent"):
-                                    comment_txt.write("¶ÎÂäÊ×ĞĞËõ½øÓĞÎó\n")
-                                errorInfo.append("¶ÎÂäÊ×ĞĞËõ½øÓĞÎó")
-                            elif int(to_check['paraIsIntent']) < 100 and rule[key] == '1':#ÕâÀï×öÒ»¸ö´ÖÂÔµÄÉè¶¨£¬ÒòÎªÒªÊÇ°´ÕÕÉÏÃæ×¢ÊÍµÄÒ»ĞĞÀ´Ö´ĞĞ£¬´íÎóÂÊÌ«¸ßÁË
-                                rp1.write(str(paraNum)+'_'+locate+'_'+'error_paraIsIntent_'+str(20*int(to_check['fontSize'])*int(rule[key]))+'\n')
-                                rp.write('    '+ to_check['paraIsIntent']+"¶ÎÂäÊ×ĞĞËõ½øÓĞÎó\n")
-                                if paragr.getparent().tag != "%s%s"%(word_schema,"sdtContent"):
-                                    comment_txt.write("¶ÎÂäÊ×ĞĞËõ½øÓĞÎó\n")
-                                errorInfo.append("¶ÎÂäÊ×ĞĞËõ½øÓĞÎó")
-                        continue
+                if key == 'paraIsIntent':#å¯¹äºç¼©è¿›ï¼Œç‰¹åˆ«å¤„ç†
+                    if to_check['leftChars']!='æœªè·å–å±æ€§å€¼' and to_check['leftChars']!='0':
+                        rp1.write(str(paraNum) + '_' + locate + '_' + 'error_paraleftChars_0\n')
+                        rp.write('    '+ to_check['leftChars'] + "æ®µè½æœ‰å·¦ä¾§ç¼©è¿›\n")
+                        if paragr.getparent().tag != "%s%s" % (word_schema, "sdtContent"):
+                            comment_txt.write("æ®µè½ç¼©è¿›æœ‰å·¦ä¾§ç¼©è¿›\n")
+                        errorInfo.append("æ®µè½å·¦ä¾§ç¼©è¿›æœ‰è¯¯")
+                    elif to_check['left'] != 'æœªè·å–å±æ€§å€¼' and to_check['left'] != '0':
+                        rp1.write(str(paraNum) + '_' + locate + '_' + 'error_paraleft_0\n')
+                        rp.write('    '+ to_check['left'] + "æ®µè½æœ‰å·¦ä¾§ç¼©è¿›\n")
+                        if paragr.getparent().tag != "%s%s" % (word_schema, "sdtContent"):
+                            comment_txt.write("æ®µè½ç¼©è¿›æœ‰å·¦ä¾§ç¼©è¿›\n")
+                        errorInfo.append("æ®µè½å·¦ä¾§ç¼©è¿›æœ‰è¯¯")
+                    if to_check['paraIsIntent1'] != 'æœªè·å–å±æ€§å€¼' and to_check['paraIsIntent1'] != '0':
+                        if to_check['paraIsIntent1'] != '200' and rule['paraIsIntent'] == '1':
+                            rp1.write(str(paraNum)+'_'+locate+'_'+'error_paraIsIntent1_200\n')
+                            rp.write('    '+ to_check['paraIsIntent1']+"æ®µè½é¦–è¡Œç¼©è¿›æœ‰è¯¯\n")
+                            if paragr.getparent().tag != "%s%s"%(word_schema,"sdtContent"):
+                                comment_txt.write("æ®µè½é¦–è¡Œç¼©è¿›æœ‰è¯¯\n")
+                            errorInfo.append("æ®µè½é¦–è¡Œç¼©è¿›æœ‰è¯¯")
+                        elif rule['paraIsIntent'] == '0':
+                            rp1.write(str(paraNum)+'_'+locate+'_'+'error_paraIsIntent1_0\n')
+                            rp.write('    '+ to_check['paraIsIntent1']+"æ®µè½é¦–è¡Œç¼©è¿›æœ‰è¯¯\n")
+                            if paragr.getparent().tag != "%s%s"%(word_schema,"sdtContent"):
+                                comment_txt.write("æ®µè½é¦–è¡Œç¼©è¿›æœ‰è¯¯\n")
+                            errorInfo.append("æ®µè½é¦–è¡Œç¼©è¿›æœ‰è¯¯")
+                    else:
+                        #if to_check['paraIsIntent'] != str(int(rule['paraIsIntent'])*int(rule[key])*20):
+                        if int(to_check['paraIsIntent']) > 0 and rule['paraIsIntent'] is '0':
+                            rp1.write(str(paraNum)+'_'+locate+'_'+'error_paraIsIntent_'+str(20*int(to_check['fontSize'])*int(rule[key]))+'\n')
+                            rp.write('    '+ to_check['paraIsIntent']+"æ®µè½é¦–è¡Œç¼©è¿›æœ‰è¯¯\n")
+                            if paragr.getparent().tag != "%s%s"%(word_schema,"sdtContent"):
+                                comment_txt.write("æ®µè½é¦–è¡Œç¼©è¿›æœ‰è¯¯\n")
+                            errorInfo.append("æ®µè½é¦–è¡Œç¼©è¿›æœ‰è¯¯")
+                        elif int(to_check['paraIsIntent']) < 100 and rule[key] == '1':#è¿™é‡Œåšä¸€ä¸ªç²—ç•¥çš„è®¾å®šï¼Œå› ä¸ºè¦æ˜¯æŒ‰ç…§ä¸Šé¢æ³¨é‡Šçš„ä¸€è¡Œæ¥æ‰§è¡Œï¼Œé”™è¯¯ç‡å¤ªé«˜äº†
+                            rp1.write(str(paraNum)+'_'+locate+'_'+'error_paraIsIntent_'+str(20*int(to_check['fontSize'])*int(rule[key]))+'\n')
+                            rp.write('    '+ to_check['paraIsIntent']+"æ®µè½é¦–è¡Œç¼©è¿›æœ‰è¯¯\n")
+                            if paragr.getparent().tag != "%s%s"%(word_schema,"sdtContent"):
+                                comment_txt.write("æ®µè½é¦–è¡Œç¼©è¿›æœ‰è¯¯\n")
+                            errorInfo.append("æ®µè½é¦–è¡Œç¼©è¿›æœ‰è¯¯")
+                    #just to experiment
+                    if islist(paragr):
+                        rp1.write(str(paraNum) + '_' + locate + '_' + 'error_paraleft_0\n')
+                        rp1.write(str(paraNum) + '_' + locate + '_' + 'error_parahanging_0\n')
+                        pass
+                    else:
+                        pass
+                    continue
                 elif key == "fontSize" or key == "fontShape":
                     font_size = []
                     font_shape = []
@@ -822,7 +800,7 @@ def check_out(rule,to_check,locate,paraNum,paragr):
                                 flag = 0
                                 if has_key(b,'val'):
                                     if get_val(b, 'val') != '0' and get_val(b, 'val') != 'false' and '1' not in font_shape:
-                                        font_shape.append('1')#±íÊ¾bold
+                                        font_shape.append('1')#è¡¨ç¤ºbold
                                     elif '0' not in font_shape:
                                         font_shape.append('0')
                                 elif '1' not in font_shape:
@@ -833,16 +811,16 @@ def check_out(rule,to_check,locate,paraNum,paragr):
                                     font_shape.append(to_check[key])
                     if key == "fontSize":
                         if len(font_size) > 1 or font_size[0] != rule[key]:
-                            rp.write('    '+errorTypeDescrip[key]+'ÊÇ'+ str(font_size) + '  ÕıÈ·Ó¦Îª£º'+rule[key]+'\n')
+                            rp.write('    '+errorTypeDescrip[key]+'æ˜¯'+ str(font_size) + '  æ­£ç¡®åº”ä¸ºï¼š'+rule[key]+'\n')
                             if paragr.getparent().tag != "%s%s"%(word_schema,"sdtContent"):
-                                comment_txt.write(errorTypeDescrip[key]+'ÊÇ'+ str(font_size) + '  ÕıÈ·Ó¦Îª£º'+rule[key]+'\n')
+                                comment_txt.write(errorTypeDescrip[key]+'æ˜¯'+ str(font_size) + '  æ­£ç¡®åº”ä¸ºï¼š'+rule[key]+'\n')
                             errorInfo.append('\'type\':\''+errorTypeName[key]+'\',\'correct\':\''+rule[key]+'\'')
                             rp1.write(str(paraNum)+'_'+locate+'_error_'+ key+'_'+ rule[key]+'\n')
                     elif key == "fontShape":
                         if len(font_shape) > 1 or font_shape[0] != rule[key]:
-                            rp.write('    '+errorTypeDescrip[key]+'ÊÇ'+ str(font_shape) + '  ÕıÈ·Ó¦Îª£º'+rule[key]+'\n')
+                            rp.write('    '+errorTypeDescrip[key]+'æ˜¯'+ str(font_shape) + '  æ­£ç¡®åº”ä¸ºï¼š'+rule[key]+'\n')
                             if paragr.getparent().tag != "%s%s"%(word_schema,"sdtContent"):
-                                comment_txt.write(errorTypeDescrip[key]+'ÊÇ'+ str(font_shape) + '  ÕıÈ·Ó¦Îª£º'+rule[key]+'\n')
+                                comment_txt.write(errorTypeDescrip[key]+'æ˜¯'+ str(font_shape) + '  æ­£ç¡®åº”ä¸ºï¼š'+rule[key]+'\n')
                             errorInfo.append('\'type\':\''+errorTypeName[key]+'\',\'correct\':\''+rule[key]+'\'')
                             rp1.write(str(paraNum)+'_'+locate+'_error_'+ key+'_'+ rule[key]+'\n')
                 elif key == "fontCN" or key == "fontEN":
@@ -853,9 +831,9 @@ def check_out(rule,to_check,locate,paraNum,paragr):
                         if ftheme and containThemeFonts(r):
                             ftheme = False
                             rp1.write(str(paraNum) + '_' + locate + '_' + 'error_fontTheme_0\n')
-                            rp.write("    µ±Ç°¶ÎÂä²¿·ÖÎªÖ÷Ìâ×ÖÌå\n")
-                            comment_txt.write("µ±Ç°¶ÎÂä²¿·ÖÎªÖ÷Ìâ×ÖÌå\n")
-                            errorInfo.append("µ±Ç°¶ÎÂä²¿·ÖÎªÖ÷Ìâ×ÖÌå")
+                            rp.write("    å½“å‰æ®µè½éƒ¨åˆ†ä¸ºä¸»é¢˜å­—ä½“\n")
+                            comment_txt.write("å½“å‰æ®µè½éƒ¨åˆ†ä¸ºä¸»é¢˜å­—ä½“\n")
+                            errorInfo.append("å½“å‰æ®µè½éƒ¨åˆ†ä¸ºä¸»é¢˜å­—ä½“")
                         rtext = ""
                         for t in _iter(r,"t"):
                             rtext += t.text
@@ -866,8 +844,8 @@ def check_out(rule,to_check,locate,paraNum,paragr):
                             for rfonts in _iter(r,"rFonts"):
                                 if has_key(rfonts,'eastAsia'):
                                     flag = 0
-                                    if get_val(rfonts, 'eastAsia').encode(Unicode_bt) not in font_CN:
-                                        font_CN.append(get_val(rfonts,"eastAsia").encode(Unicode_bt))
+                                    if get_val(rfonts, 'eastAsia') not in font_CN:
+                                        font_CN.append(get_val(rfonts,"eastAsia"))
                                 break
                             if flag == 1:
                                 if to_check[key] not in font_CN:
@@ -877,93 +855,65 @@ def check_out(rule,to_check,locate,paraNum,paragr):
                             for rfonts in _iter(r,"rFonts"):
                                 if has_key(rfonts,"ascii"):
                                     flag = 0
-                                    if get_val(rfonts,"ascii").encode(Unicode_bt) not in font_EN:
-                                        font_EN.append(get_val(rfonts,"ascii").encode(Unicode_bt))
+                                    if get_val(rfonts,"ascii") not in font_EN:
+                                        font_EN.append(get_val(rfonts,"ascii"))
                                 break
                             if flag == 1:
                                 if to_check[key] not in font_EN:
                                     font_EN.append(to_check[key])
                     if key == "fontCN":
                         if len(font_CN) > 1 or font_CN[0] != rule[key]:
-                            rp.write('    '+errorTypeDescrip[key]+'ÊÇ')
+                            rp.write('    '+errorTypeDescrip[key]+'æ˜¯')
                             if paragr.getparent().tag != "%s%s"%(word_schema,"sdtContent"):
-                                comment_txt.write(errorTypeDescrip[key]+'ÊÇ')
+                                comment_txt.write(errorTypeDescrip[key]+'æ˜¯')
                             for font in font_CN:
                                 rp.write(font+" ")
                                 if paragr.getparent().tag != "%s%s"%(word_schema,"sdtContent"):
                                     comment_txt.write(font+" ")
-                            rp.write('ÕıÈ·Ó¦Îª£º'+rule[key]+'\n')
+                            rp.write('æ­£ç¡®åº”ä¸ºï¼š'+rule[key]+'\n')
                             if paragr.getparent().tag != "%s%s"%(word_schema,"sdtContent"):
-                                comment_txt.write('ÕıÈ·Ó¦Îª£º'+rule[key]+'\n')
+                                comment_txt.write('æ­£ç¡®åº”ä¸ºï¼š'+rule[key]+'\n')
                             errorInfo.append('\'type\':\''+errorTypeName[key]+'\',\'correct\':\''+rule[key]+'\'')
                             rp1.write(str(paraNum)+'_'+locate+'_error_'+ key+'_'+ rule[key]+'\n')
                     elif key == "fontEN":
                         if len(font_EN) > 1 or font_EN[0] != rule[key]:
-                            rp.write('    '+errorTypeDescrip[key]+'ÊÇ')
+                            rp.write('    '+errorTypeDescrip[key]+'æ˜¯')
                             if paragr.getparent().tag != "%s%s"%(word_schema,"sdtContent"):
-                                comment_txt.write(errorTypeDescrip[key]+'ÊÇ')
+                                comment_txt.write(errorTypeDescrip[key]+'æ˜¯')
                             for font in font_EN:
                                 rp.write(font+" ")
                                 if paragr.getparent().tag != "%s%s"%(word_schema,"sdtContent"):
                                     comment_txt.write(font+" ")
-                            rp.write('ÕıÈ·Ó¦Îª£º'+rule[key]+'\n')
+                            rp.write('æ­£ç¡®åº”ä¸ºï¼š'+rule[key]+'\n')
                             if paragr.getparent().tag != "%s%s"%(word_schema,"sdtContent"):
-                                comment_txt.write('ÕıÈ·Ó¦Îª£º'+rule[key]+'\n')
+                                comment_txt.write('æ­£ç¡®åº”ä¸ºï¼š'+rule[key]+'\n')
                             errorInfo.append('\'type\':\''+errorTypeName[key]+'\',\'correct\':\''+rule[key]+'\'')
                             rp1.write(str(paraNum)+'_'+locate+'_error_'+ key+'_'+ rule[key]+'\n')
                 else:
                     if to_check[key] != rule[key]:
-                        rp.write('    '+errorTypeDescrip[key]+'ÊÇ'+to_check[key]+'  ÕıÈ·Ó¦Îª£º'+rule[key]+'\n')
+                        rp.write('    '+errorTypeDescrip[key]+'æ˜¯'+to_check[key]+'  æ­£ç¡®åº”ä¸ºï¼š'+rule[key]+'\n')
                         if paragr.getparent().tag != "%s%s"%(word_schema,"sdtContent"):
-                            comment_txt.write(errorTypeDescrip[key]+'ÊÇ'+ to_check[key] + '  ÕıÈ·Ó¦Îª£º'+rule[key]+'\n')
+                            comment_txt.write(errorTypeDescrip[key]+'æ˜¯'+ to_check[key] + '  æ­£ç¡®åº”ä¸ºï¼š'+rule[key]+'\n')
                         errorInfo.append('\'type\':\''+errorTypeName[key]+'\',\'correct\':\''+rule[key]+'\'')
                         rp1.write(str(paraNum)+'_'+locate+'_error_'+ key+'_'+ rule[key]+'\n')
     return errorInfo
 
-def grade2num():
-    # 20160121 zqd
-    # modified: xml_tree
-    numPrIlvl = [0,0,0,0]
-    for paragr in _iter(xml_tree,'p'):
-        for pPr in paragr.iter(tag=etree.Element):
-            if _check_element_is(pPr,'pPr'):
-                for numPr in pPr.iter(tag=etree.Element):
-                    if _check_element_is(numPr,'numPr'):
-                        for ilvl in numPr.iter(tag=etree.Element):
-                            if _check_element_is(ilvl,'ilvl'):
-                                if has_key(ilvl,'val'):#ÓĞ´ËÊôĞÔ
-                                    result = get_val(ilvl,'val')
-                                    if result == "0":
-                                        numPrIlvl[0] += 1
-                                        numPrIlvl[1] = numPrIlvl[2] = numPrIlvl[3] = 0
-                                    elif result == "1":
-                                        numPrIlvl[1] += 1
-                                        numPrIlvl[2] = numPrIlvl[3] = 0
-                                    elif result == "2":
-                                        numPrIlvl[2] += 1
-                                        numPrIlvl[3] = 0
-                                    elif result == "3":
-                                        numPrIlvl[3] += 1
-                                    strNumPr = ""
-                                    i = 0
-                                    while numPrIlvl[i] != 0 and i < 4:
-                                        strNumPr += str(numPrIlvl[i])+"."
-                                        i+=1
-                                    pPr.remove(numPr)
-                                    for node in paragr.iter(tag=etree.Element):
-                                        if _check_element_is(node,'t'):
-                                            node.text = strNumPr+" "+node.text
-                                            break
+def containchildnode(parent,child):
+    for node in parent:
+        if _check_element_is(node,child):
+            return True
+    return False
 
-#ÅĞ¶ÏÊÇ·ñÖĞÎÄ
-def is_chinese(uchar):
-    """ ÅĞ¶ÏÒ»¸öunicodeÊÇ·ñÊÇºº×Ö """
-    if uchar >= u'\u4e00' and uchar<=u'\u9fa5 ':
-        return True
-    else :
-        return  False
+def containThemeFonts(r):
+    for rPr in _iter(r,"rPr"):
+        if rPr.getparent().tag != "%s%s" % (word_schema, "r"):
+            continue
+        for rFonts in _iter(rPr,"rFonts"):
+            for theme in ['asciiTheme','cstheme','eastAsiaTheme','hAnsiTheme']:
+                if has_key(rFonts,theme) and get_val(rFonts,theme)!="" and get_val(rFonts,theme)!="æœªè·å–å±æ€§å€¼":
+                    return True
 
-#ÅĞ¶Ï¶ÎÂäÖĞÓĞÎŞ½»²æÒıÓÃ zwl
+#åˆ¤æ–­æ®µè½ä¸­æœ‰æ— äº¤å‰å¼•ç”¨ zwl
 def contain_ref(para,paraNum):
     flag = 0
     refnum = 0
@@ -991,11 +941,11 @@ def contain_ref(para,paraNum):
                                     break
                                 else:
                                     rp1.write(str(paraNum) + '_' + str(refnum) + '_error_ref_['+str(i)+']'+'\n')
-                                    rp.write("²Î¿¼ÎÄÏ×µÄ½»²æÒıÓÃÓëÄ¿±ê²»·û,Î´¸üĞÂ\n")
-                            #        comment_txt.write("²Î¿¼ÎÄÏ×µÄ½»²æÒıÓÃÓë²Î¿¼ÎÄÏ×ÁĞ±íÖĞ¶ÔÓ¦µÄÁĞ±íÏî²»·û£¬¿ÉÄÜÎ´¸üĞÂ\n")
+                                    rp.write("å‚è€ƒæ–‡çŒ®çš„äº¤å‰å¼•ç”¨ä¸ç›®æ ‡ä¸ç¬¦,æœªæ›´æ–°\n")
+                            #        comment_txt.write("å‚è€ƒæ–‡çŒ®çš„äº¤å‰å¼•ç”¨ä¸å‚è€ƒæ–‡çŒ®åˆ—è¡¨ä¸­å¯¹åº”çš„åˆ—è¡¨é¡¹ä¸ç¬¦ï¼Œå¯èƒ½æœªæ›´æ–°\n")
                         if existflag == 0:
-                            rp.write("²Î¿¼ÎÄÏ×µÄ½»²æÒıÓÃÎ´ÔÚ²Î¿¼ÎÄÏ×ÁĞ±íÖĞÕÒµ½¶ÔÓ¦µÄÁĞ±íÏî£¬¿ÉÄÜÎ´¸üĞÂ\n")
-                           # comment_txt.write("²Î¿¼ÎÄÏ×µÄ½»²æÒıÓÃÎ´ÔÚ²Î¿¼ÎÄÏ×ÁĞ±íÖĞÕÒµ½¶ÔÓ¦µÄÁĞ±íÏî£¬¿ÉÄÜÎ´¸üĞÂ\n")
+                            rp.write("å‚è€ƒæ–‡çŒ®çš„äº¤å‰å¼•ç”¨æœªåœ¨å‚è€ƒæ–‡çŒ®åˆ—è¡¨ä¸­æ‰¾åˆ°å¯¹åº”çš„åˆ—è¡¨é¡¹ï¼Œå¯èƒ½æœªæ›´æ–°\n")
+                           # comment_txt.write("å‚è€ƒæ–‡çŒ®çš„äº¤å‰å¼•ç”¨æœªåœ¨å‚è€ƒæ–‡çŒ®åˆ—è¡¨ä¸­æ‰¾åˆ°å¯¹åº”çš„åˆ—è¡¨é¡¹ï¼Œå¯èƒ½æœªæ›´æ–°\n")
                     ref_text = ''
                     flag = 0
                     ref_value['ref'] == None
@@ -1013,8 +963,8 @@ def contain_ref(para,paraNum):
                 for vertAlign in _iter(r,'vertAlign'):
                     vertAlignValue = get_val(vertAlign,'val')
                 if vertAlignValue != 'superscript':
-                    rp.write("²Î¿¼ÎÄÏ×µÄ½»²æÒıÓÃÎ´Ê¹ÓÃÉÏ±ê\n")
-                    #comment_txt.write("²Î¿¼ÎÄÏ×µÄ½»²æÒıÓÃÎ´Ê¹ÓÃÉÏ±ê\n")
+                    rp.write("å‚è€ƒæ–‡çŒ®çš„äº¤å‰å¼•ç”¨æœªä½¿ç”¨ä¸Šæ ‡\n")
+                    #comment_txt.write("å‚è€ƒæ–‡çŒ®çš„äº¤å‰å¼•ç”¨æœªä½¿ç”¨ä¸Šæ ‡\n")
                     rp1.write(str(paraNum) + '_' + str(refnum) + '_error_refVertAlign_superscript\n')
 
 def getabstractnumId(numid):
@@ -1045,24 +995,22 @@ def getformat(abstractnumid,ilvl):
 
 def graphOrExcelTitle(ObjectFlag,ptext,paraNum,paragr):
     #hsy
-    graphTitlePattern = re.compile('Í¼(\s)*[0-9]+(\\.|-)[0-9]')#Í¼±êÌâµÄÕıÔò±í´ïÊ½
-    wrongGraphTitlePattern = re.compile('Í¼(\s)*[0-9]')#´íÎóÍ¼±êÌâµÄÕıÔò±í´ïÊ½
-    excelTitlePattern = re.compile('±í(\s)*[0-9]+(\\.|-)[0-9]')#±í±êÌâµÄÕıÔò±í´ïÊ½
-    wrongExcelTitlePattern = re.compile('±í(\s)*[0-9]')#´íÎó±í±êÌâµÄÕıÔò±í´ïÊ½
+    graphTitlePattern = re.compile('å›¾(\s)*[0-9]+(\\.|-)[0-9]')#å›¾æ ‡é¢˜çš„æ­£åˆ™è¡¨è¾¾å¼
+    wrongGraphTitlePattern = re.compile('å›¾(\s)*[0-9]')#é”™è¯¯å›¾æ ‡é¢˜çš„æ­£åˆ™è¡¨è¾¾å¼
+    excelTitlePattern = re.compile('è¡¨(\s)*[0-9]+(\\.|-)[0-9]')#è¡¨æ ‡é¢˜çš„æ­£åˆ™è¡¨è¾¾å¼
+    wrongExcelTitlePattern = re.compile('è¡¨(\s)*[0-9]')#é”™è¯¯è¡¨æ ‡é¢˜çš„æ­£åˆ™è¡¨è¾¾å¼
     #
     if ObjectFlag == 1:
         if not graphTitlePattern.match(ptext):
-            rp.write('     warning: ÕÒ²»µ½¶ÔÓ¦Í¼×¢ ----->'+ptext+'\n')
-            #print('     warning: ÕÒ²»µ½¶ÔÓ¦Í¼×¢ ----->'+ptext)
-        ObjectFlag = 0
+            rp.write('     warning: æ‰¾ä¸åˆ°å¯¹åº”å›¾æ³¨ ----->'+ptext+'\n')
     if graphTitlePattern.match(ptext):
         if paraNum - 1 in locate.keys():
             if locate[paraNum - 1] != 'object':
-                rp.write('    warning: Ã»ÓĞ¶ÔÓ¦µÄÍ¼¡£--->' + ptext + '\n')
-             #   print('    warning: Ã»ÓĞ¶ÔÓ¦µÄÍ¼¡£--->' + ptext)
+                rp.write('    warning: æ²¡æœ‰å¯¹åº”çš„å›¾ã€‚--->' + ptext + '\n')
+             #   print('    warning: æ²¡æœ‰å¯¹åº”çš„å›¾ã€‚--->' + ptext)
         else:
-            rp.write('    warning: Ã»ÓĞ¶ÔÓ¦µÄÍ¼¡£--->' + ptext + '\n')
-            #print('    warning: Ã»ÓĞ¶ÔÓ¦µÄÍ¼¡£--->' + ptext)
+            rp.write('    warning: æ²¡æœ‰å¯¹åº”çš„å›¾ã€‚--->' + ptext + '\n')
+            #print('    warning: æ²¡æœ‰å¯¹åº”çš„å›¾ã€‚--->' + ptext)
         found = False
         for node in paragr.iter(tag=etree.Element):
             if _check_element_is(node, 'r'):
@@ -1071,11 +1019,11 @@ def graphOrExcelTitle(ObjectFlag,ptext,paraNum,paragr):
                         if bookmarks.values()[1][:4] == '_Ref':
                             found = True
         if not found:
-            rp.write('    ´ËÍ¼×¢Ã»±»ÒıÓÃ¹ı' + ptext + '\n')
-            #print('    ´ËÍ¼×¢Ã»±»ÒıÓÃ¹ı' + ptext + '\n')
+            rp.write('    æ­¤å›¾æ³¨æ²¡è¢«å¼•ç”¨è¿‡' + ptext + '\n')
+            #print('    æ­¤å›¾æ³¨æ²¡è¢«å¼•ç”¨è¿‡' + ptext + '\n')
     if wrongGraphTitlePattern.match(ptext) and not graphTitlePattern.match(ptext):
-        rp.write('    warning: Çë¸ÄÎª·ûºÏ¹æÔòµÄÍ¼×¢ ------>' + ptext + '\n')
-        #print('    warning: Çë¸ÄÎª·ûºÏ¹æÔòµÄÍ¼×¢ ------>' + ptext)
+        rp.write('    warning: è¯·æ”¹ä¸ºç¬¦åˆè§„åˆ™çš„å›¾æ³¨ ------>' + ptext + '\n')
+        #print('    warning: è¯·æ”¹ä¸ºç¬¦åˆè§„åˆ™çš„å›¾æ³¨ ------>' + ptext)
         found = False
         for node in paragr.iter(tag=etree.Element):
             if _check_element_is(node, 'r'):
@@ -1084,8 +1032,8 @@ def graphOrExcelTitle(ObjectFlag,ptext,paraNum,paragr):
                         if bookmarks.values()[1][:4] == '_Ref':
                             found = True
         if not found:
-            rp.write('    ´ËÍ¼×¢Ã»±»ÒıÓÃ¹ı' + ptext + '\n')
-         #   print('    ´ËÍ¼×¢Ã»±»ÒıÓÃ¹ı' + ptext )
+            rp.write('    æ­¤å›¾æ³¨æ²¡è¢«å¼•ç”¨è¿‡' + ptext + '\n')
+         #   print('    æ­¤å›¾æ³¨æ²¡è¢«å¼•ç”¨è¿‡' + ptext )
     if excelTitlePattern.match(ptext):
         found = False
         for node in paragr.iter(tag = etree.Element):
@@ -1095,11 +1043,11 @@ def graphOrExcelTitle(ObjectFlag,ptext,paraNum,paragr):
                         if bookmarks.values()[1][:4] == '_Ref':
                             found = True
         if not found:
-            rp.write('    ´ËÍ¼×¢Ã»±»ÒıÓÃ¹ı' + ptext + '\n')
-          #  print('    ´ËÍ¼×¢Ã»±»ÒıÓÃ¹ı' + ptext)
+            rp.write('    æ­¤å›¾æ³¨æ²¡è¢«å¼•ç”¨è¿‡' + ptext + '\n')
+          #  print('    æ­¤å›¾æ³¨æ²¡è¢«å¼•ç”¨è¿‡' + ptext)
     if wrongExcelTitlePattern.match(ptext) and not excelTitlePattern.match(ptext):
-        rp.write('    warning: Çë¸ÄÎª·ûºÏ¹æÔòµÄÍ¼×¢------->'+ptext+'\n')
-        #print('    warning: Çë¸ÄÎª·ûºÏ¹æÔòµÄÍ¼×¢------->'+ptext+'\n')
+        rp.write('    warning: è¯·æ”¹ä¸ºç¬¦åˆè§„åˆ™çš„å›¾æ³¨------->'+ptext+'\n')
+        #print('    warning: è¯·æ”¹ä¸ºç¬¦åˆè§„åˆ™çš„å›¾æ³¨------->'+ptext+'\n')
         found = False
         for node in paragr.iter(tag=etree.Element):
             if _check_element_is(node, 'r'):
@@ -1108,156 +1056,150 @@ def graphOrExcelTitle(ObjectFlag,ptext,paraNum,paragr):
                         if bookmarks.values()[1][:4] == '_Ref':
                             found = True
         if not found:
-            rp.write('    warning: ´ËÍ¼×¢Ã»±»ÒıÓÃ¹ı' + ptext + '\n' )
-                
-def containchildnode(parent,child):
-    for node in parent:
-        if _check_element_is(node,child):
-            return True
-    return False
+            rp.write('    warning: æ­¤å›¾æ³¨æ²¡è¢«å¼•ç”¨è¿‡' + ptext + '\n' )
 
-def containThemeFonts(r):
-    for rPr in _iter(r,"rPr"):
-        if rPr.getparent().tag != "%s%s" % (word_schema, "r"):
+if __name__ == '__main__':
+    startTime=time.time()
+    #Docx_Filename= input("please input the path of your docx:")
+    # Docx_Filename = "test.docx"
+    #try:
+    zipF = zipfile.ZipFile(Docx_Filename)
+    xml_from_file = zipF.read('word/document.xml')
+    style_from_file = zipF.read('word/styles.xml')
+    xml_tree = etree.fromstring(xml_from_file)
+    style_tree = etree.fromstring(style_from_file)
+    #numbering_content = zipF.read("word/numbering.xml")
+    # numbering_tree = etree.fromstring(numbering_content)
+    #except:
+        #print("error in reading the docx document.")
+        #exit(0)
+    rules_dct = read_rules(Rule_Filename)
+    part = {}
+    locate = {}
+    #å‚è€ƒæ–‡çŒ®å­—å…¸zwl
+    ref_dic = {}
+    #hsy
+    reference = []
+    spaceNeeded = []
+    ObjectFlag = 0
+    #
+    first_locate()
+    second_locate()
+    paraNum=0
+    empty_para=0
+
+    rp = open(Data_DirPath + 'check_out','w')
+    rp1 = open(Data_DirPath + 'check_out1','w')
+    rp2 = open(Data_DirPath + 'space','w')
+    comment_txt = open(Data_DirPath + "comment.txt","w")
+
+    # rp = open('check_out','w')
+    # rp1 = open('check_out1','w')
+    # rp2 = open('space','w')
+    # comment_txt = open("comment","w")
+    #sys.exit()
+    rp.write('''è®ºæ–‡æ ¼å¼æ£€æŸ¥æŠ¥å‘Šæ–‡æ¡£ä½¿ç”¨è¯´æ˜ï¼š
+    *****æ­¤ç‰ˆæœ¬ä¸ºåˆæ¬¡ä¸Šçº¿æµ‹è¯•ç‰ˆï¼Œéš¾å…å­˜åœ¨è¯¯åˆ¤ç­‰è®¸å¤šé—®é¢˜ï¼Œé‡åˆ°è¯¯åˆ¤æ—¶è¯·è°…è§£ï¼Œå¹¶å¯ä»¥å°†é—®é¢˜åé¦ˆç»™æˆ‘ä»¬å®Œå–„ç¨‹åºâˆ§_âˆ§*****
+    å„å­—æ®µå€¼è¯´æ˜ï¼š
+    ä½ç½®  ä¸ºç¨‹åºåˆ¤æ–­è¯¥æ®µè½æ–‡æœ¬åœ¨ä½ è®ºæ–‡ä¸­å¯èƒ½çš„ä½ç½®ï¼Œå¦‚æœå‘ç°ä¸ä½ çš„è®ºæ–‡ä¸­ä½ç½®ä¸ç¬¦ï¼Œè¯·å¿½ç•¥å…¶åçš„æ ¼å¼æ£€æŸ¥ä¿¡æ¯
+    å­—å½¢  0è¡¨ç¤ºæœªåŠ ç²—ï¼Œ1è¡¨ç¤ºåŠ ç²—
+    è¡Œé—´è· N=æ•°å€¼/240ï¼Œå³ä¸ºNå€è¡Œè·
+    æ®µå‰æ®µåçš„æ•°å€¼å•ä½å‡ä¸ºç£…
+    é¦–è¡Œç¼©è¿›0è¡¨ç¤ºé¦–è¡Œæœªç¼©è¿›ï¼Œ1è¡¨ç¤ºé¦–è¡Œç¼©è¿›2å­—ç¬¦
+    warningä¿¡æ¯è¡¨ç¤ºå¯èƒ½å­˜åœ¨çš„é—®é¢˜ï¼Œä¸ä¸€å®šå‡†ç¡®
+    **********å¹¶ä¸åä¸½çš„åˆ†å‰²çº¿ï¼ˆç„¶å¹¶åµï¼‰**********
+    ''')
+    location = ""
+    p_format={}.fromkeys(['fontCN','fontEN','fontSize','paraAlign','fontShape','paraSpace',
+                             'paraIsIntent','paraFrontSpace','paraAfterSpace','paraGrade',"leftChars","left"])
+    for paragr in _iter(xml_tree,'p'):
+        paraNum +=1
+        if paragr.getparent().tag == '%s%s'% (word_schema,'txbxContent'):
             continue
-        for rFonts in _iter(rPr,"rFonts"):
-            for theme in ['asciiTheme','cstheme','eastAsiaTheme','hAnsiTheme']:
-                if has_key(rFonts,theme) and get_val(rFonts,theme)!="" and get_val(rFonts,theme)!="Î´»ñÈ¡ÊôĞÔÖµ":
-                    return True
-
-startTime=time.time()
-xml_from_file,style_from_file = get_word_xml(Docx_Filename)
-xml_tree   = get_xml_tree(xml_from_file)
-style_tree = get_xml_tree(style_from_file)
-zipF = zipfile.ZipFile(Docx_Filename)
-numbering_content = zipF.read("word/numbering.xml")
-numbering_tree = etree.fromstring(numbering_content)
-rules_dct=read_rules(Rule_Filename)
-part = {}
-locate = {}
-paraNum=0
-#hsy
-reference = []
-spaceNeeded = []
-ObjectFlag=0
-#
-empty_para=0
-#²Î¿¼ÎÄÏ××Öµäzwl
-ref_dic = {}
-rp = open(Data_DirPath + 'check_out.txt','w')
-rp1 = open(Data_DirPath + 'check_out1.txt','w')
-rp2 = open(Data_DirPath + 'space.txt','w')
-comment_txt = open(Data_DirPath + "comment.txt","w")
-#sys.exit()
-reference = first_locate()
-warninglist = second_locate()
-rp.write('''ÂÛÎÄ¸ñÊ½¼ì²é±¨¸æÎÄµµÊ¹ÓÃËµÃ÷£º
-*****´Ë°æ±¾Îª³õ´ÎÉÏÏß²âÊÔ°æ£¬ÄÑÃâ´æÔÚÎóÅĞµÈĞí¶àÎÊÌâ£¬Óöµ½ÎóÅĞÊ±ÇëÁÂ½â£¬²¢¿ÉÒÔ½«ÎÊÌâ·´À¡¸øÎÒÃÇÍêÉÆ³ÌĞò¡Ä_¡Ä*****
-¸÷×Ö¶ÎÖµËµÃ÷£º
-Î»ÖÃ  Îª³ÌĞòÅĞ¶Ï¸Ã¶ÎÂäÎÄ±¾ÔÚÄãÂÛÎÄÖĞ¿ÉÄÜµÄÎ»ÖÃ£¬Èç¹û·¢ÏÖÓëÄãµÄÂÛÎÄÖĞÎ»ÖÃ²»·û£¬ÇëºöÂÔÆäºóµÄ¸ñÊ½¼ì²éĞÅÏ¢
-×ÖĞÎ  0±íÊ¾Î´¼Ó´Ö£¬1±íÊ¾¼Ó´Ö
-ĞĞ¼ä¾à N=ÊıÖµ/240£¬¼´ÎªN±¶ĞĞ¾à
-¶ÎÇ°¶ÎºóµÄÊıÖµµ¥Î»¾ùÎª°õ
-Ê×ĞĞËõ½ø0±íÊ¾Ê×ĞĞÎ´Ëõ½ø£¬1±íÊ¾Ê×ĞĞËõ½ø2×Ö·û
-warningĞÅÏ¢±íÊ¾¿ÉÄÜ´æÔÚµÄÎÊÌâ£¬²»Ò»¶¨×¼È·
-**********²¢²»»ªÀöµÄ·Ö¸îÏß£¨È»²¢ÂÑ£©**********
-''')
-p_format={}.fromkeys(['fontCN','fontEN','fontSize','paraAlign','fontShape','paraSpace',
-                         'paraIsIntent','paraFrontSpace','paraAfterSpace','paraGrade',"leftChars","left"])
-for paragr in _iter(xml_tree,'p'):
-    paraNum +=1
-    if paragr.getparent().tag == '%s%s'% (word_schema,'txbxContent'):
-        continue
-    ptext = get_ptext(paragr)
-    if paraNum in locate.keys():
-        location = locate[paraNum]
-    rp.write(str(paraNum) + ' ' + ptext + ' ' + location + '\n')
-    if paragr.getparent().tag != "%s%s"%(word_schema,"sdtContent"):
-        comment_txt.write("Id:"+str(paraNum)+'\n')
-    if ptext == ' ' or ptext == '':
-        empty_para += 1
-        if empty_para>=2:
-            rp.write(' \n    warning:²»ÔÊĞí³öÏÖÁ¬Ğø¿ÕĞĞ \n')
-            if paragr.getparent().tag != "%s%s"%(word_schema,"sdtContent"):
-                comment_txt.write("warning:²»ÔÊĞí³öÏÖÁ¬Ğø¿ÕĞĞ\n")
-        else:
-            if paragr.getparent().tag != "%s%s"%(word_schema,"sdtContent"):
-                comment_txt.write("correct\n")
-        continue
-    if not is_chinese(ptext.decode(Unicode_bt)[0]) and not (ptext.decode(Unicode_bt)[0] >= '\0' and ptext.decode(Unicode_bt)[0] <= chr(127)) and \
-            not (ptext.startswith("£¨") or ptext.startswith("£©")):
+        ptext = get_ptext(paragr)
+        if paraNum in locate.keys():
+            location = locate[paraNum]
+        rp.write(str(paraNum) + ' ' + ptext + ' ' + location + '\n')
         if paragr.getparent().tag != "%s%s"%(word_schema,"sdtContent"):
+            comment_txt.write("Id:"+str(paraNum)+'\n')
+        if ptext == ' ' or ptext == '':
+            empty_para += 1
+            if empty_para>=2:
+                rp.write(' \n    warning:ä¸å…è®¸å‡ºç°è¿ç»­ç©ºè¡Œ \n')
+                if paragr.getparent().tag != "%s%s"%(word_schema,"sdtContent"):
+                    comment_txt.write("warning:ä¸å…è®¸å‡ºç°è¿ç»­ç©ºè¡Œ\n")
+            else:
+                if paragr.getparent().tag != "%s%s"%(word_schema,"sdtContent"):
+                    comment_txt.write("correct\n")
+            continue
+        empty_para =0
+        get_format(paragr,p_format)
+        #ä¸‹é¢è¿™å‡½æ•°åˆ¤æ–­å½“å‰å›¾è¡¨æ ‡æ³¨çš„å¼•ç”¨ï¼Œç”Ÿæˆé”™è¯¯ä¿¡æ¯ï¼Œè¿˜æœªå†™ä¿®æ”¹çš„æ–¹æ³•
+        #graphOrExcelTitle(ObjectFlag,ptext,paraNum,paragr)
+        if location == 'object':
+            ObjectFlag = 1
             comment_txt.write("correct\n")
-        continue
-    empty_para =0
-    get_format(paragr,p_format)
-    #ÏÂÃæÕâº¯ÊıÅĞ¶Ïµ±Ç°Í¼±í±ê×¢µÄÒıÓÃ£¬Éú³É´íÎóĞÅÏ¢£¬»¹Î´Ğ´ĞŞ¸ÄµÄ·½·¨
-    graphOrExcelTitle(ObjectFlag,ptext,paraNum,paragr)
-    if location == 'object':
-        ObjectFlag = 1
-        comment_txt.write("correct\n")
-        continue
-    first_text = 0
-    for r in _iter(paragr,"r"):
-        rtext = ""
-        if containchildnode(r,"tab"):
-            rp.write("¶ÎÊ×ÓĞtab¼ü")
-            rp1.write(str(paraNum) + '_' + 'paraStart' + '_error_' + 'startWithTabs' + '_0\n')
-            break
-        pat = re.compile(' |¡¡+')
-        for t in _iter(r, 't'):
-            rtext += t.text.encode(Unicode_bt, 'ignore')
-        if len(pat.sub("", rtext)) == 0:
             continue
         else:
-            break
-    if location != 'taskbook' and (ptext.startswith(" ") or ptext.startswith("¡¡")):
-        rp.write("    ¶ÎÊ×ÓĞ¿Õ¸ñ\n")
-        rp1.write(str(paraNum)+'_'+'paraStart'+'_error_'+'startWithSpace'+'_0\n')
+            ObjectFlag = 0
+        first_text = 0
+        for r in _iter(paragr,"r"):
+            rtext = ""
+            if containchildnode(r,"tab"):
+                rp.write("æ®µé¦–æœ‰tabé”®")
+                rp1.write(str(paraNum) + '_' + 'paraStart' + '_error_' + 'startWithTabs' + '_0\n')
+                break
+            pat = re.compile(' |ã€€+')
+            for t in _iter(r, 't'):
+                rtext += t.text
+            if len(pat.sub("", rtext)) == 0:
+                continue
+            else:
+                break
+        if location != 'taskbook' and (ptext.startswith(" ") or ptext.startswith("ã€€")):
+            rp.write("    æ®µé¦–æœ‰ç©ºæ ¼\n")
+            rp1.write(str(paraNum)+'_'+'paraStart'+'_error_'+'startWithSpace'+'_0\n')
+        contain_ref(paragr,paraNum)
+        if location in rules_dct.keys():
+            rp.write('    ä½ç½®ï¼š'+rules_dct[location]['name']+'\n')
+            errorInfo = check_out(rules_dct[location],p_format,location,paraNum,paragr)
+        else:
+            errorInfo=''
+        if errorInfo:
+            pass
+        else:
+            rp.write('    æ£€æŸ¥ï¼š æ ¼å¼æ­£ç¡®\n')
+            if paragr.getparent().tag != "%s%s"%(word_schema,"sdtContent"):
+                comment_txt.write('correct\n')
 
-    contain_ref(paragr,paraNum)
-    
-    if location in rules_dct.keys():
-        rp.write('    Î»ÖÃ£º'+rules_dct[location]['name']+'\n')
-        errorInfo = check_out(rules_dct[location],p_format,location,paraNum,paragr)
-    else:
-        errorInfo=''
-    if errorInfo:
+    for num in spaceNeeded:
+        rp2.write('%d' %num)
+        rp2.write('\n')
+
+    endTime=time.time()
+    print('ç”¨æ—¶ï¼š %.2f ms' % (100*(endTime-startTime)))
+
+    hyperlinks = []
+    bookmarks = []
+    #æ£€æŸ¥ç›®å½•æ˜¯å¦è‡ªåŠ¨æ›´æ–°
+    for node in _iter(xml_tree, 'hyperlink'):
+        temp=''
+        for hl in _iter(node,'t'):
+            temp += hl.text
+        hyperlinks.append(node.values()[0])
+    for node in _iter(xml_tree, 'bookmarkStart'):
+        bookmarks.append(node.values()[1])
+
+    catalog_ud= True
+    for i in hyperlinks:
+        if i not in bookmarks:
+            catalog_ud =False
+    if catalog_ud:
         pass
     else:
-        rp.write('    ¼ì²é£º ¸ñÊ½ÕıÈ·\n')
-        if paragr.getparent().tag != "%s%s"%(word_schema,"sdtContent"):
-            comment_txt.write('correct\n')
-
-for num in spaceNeeded:
-    rp2.write('%d' %num)
-    rp2.write('\n') 
-
-endTime=time.time()
-print '   ÓÃÊ±£º %.2f ms' % (100*(endTime-startTime))
-
-hyperlinks = []
-bookmarks = []
-#¼ì²éÄ¿Â¼ÊÇ·ñ×Ô¶¯¸üĞÂ
-for node in _iter(xml_tree, 'hyperlink'):
-    temp=''
-    for hl in _iter(node,'t'):
-        temp += hl.text
-    hyperlinks.append(node.values()[0])
-for node in _iter(xml_tree, 'bookmarkStart'):
-    bookmarks.append(node.values()[1])
-
-catalog_ud= True
-for i in hyperlinks:  
-    if i not in bookmarks:
-        catalog_ud =False
-if catalog_ud:
-    pass
-else:
-    pass
-
-rp.write('\n\n\nÂÛÎÄ¸ñÊ½¼ì²éÍê±Ï£¡\n')
-rp.close()
-rp1.close()
-rp2.close()
-comment_txt.close()
+        pass
+    rp.write('\n\n\nè®ºæ–‡æ ¼å¼æ£€æŸ¥å®Œæ¯•ï¼\n')
+    rp.close()
+    rp1.close()
+    rp2.close()
+    comment_txt.close()

@@ -20,12 +20,13 @@ public class ExecPy implements Runnable{
     public void run() {
 
         String classPath = String.valueOf(ExecPy.class.getResource(""));
-        classPath = classPath.substring(classPath.indexOf("/") + 1);
-        System.out.println("classPath : " + classPath.substring(classPath.indexOf("/") + 1));
-//        String PyDirPath = "C:/Users/Billy/Documents/GitHub/OfficialProgram/Paper/web/";
+        classPath = classPath.substring(classPath.indexOf("/"));
+        System.out.println("classPath : " + classPath);
         String checkPy = /*PyDirPath + */classPath + "check.py";
         String modifyPy = /*PyDirPath + */classPath + "modify.py";
         String DataDirPath = dirPath + docFileName + "/";
+        System.out.println("dirPath: " + dirPath);
+        System.out.println("docFileName: " + docFileName);
 
         try {
 
